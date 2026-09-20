@@ -1,0 +1,9 @@
+# Store text files with LF and check them out with LF, on every platform.
+# Without this, Git on Windows warns "LF will be replaced by CRLF" on each commit.
+* text=auto eol=lf
+
+# Never touch binaries.
+*.png binary
+*.pdf binary
+*.joblib binary
+*.pt binary
