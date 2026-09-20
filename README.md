@@ -76,8 +76,7 @@ Rows where the VM was **switched off** (memory capacity of 0, every other number
 are skipped before anything is measured — counting them drags averages down and puts
 unqualified VMs at the top of the ranking.
 
-**Outputs:** `data/processed/vm_survey.csv`, `plots/top_vms.png`,
-`plots/cpu_distribution.png`.
+**Outputs:** `data/processed/vm_survey.csv`, plus two plots shown on screen.
 
 ### 2. Clean the chosen VM
 
@@ -90,7 +89,7 @@ strict 5-minute grid. Memory becomes a percentage of what the VM was given, netw
 received plus transmitted. Gaps of up to 15 minutes are forward-filled; longer gaps are
 deleted rather than invented.
 
-**Outputs:** `data/processed/270_clean.csv`, `plots/270_week.png`.
+**Outputs:** `data/processed/270_clean.csv`, plus a one-week plot shown on screen.
 
 ### 3. Prepare the data for the model
 
@@ -101,13 +100,16 @@ python -m utils.preprocessing
 In this exact order: chronological 70/15/15 split → MinMax scaling **fitted on training
 data only** → 60-step sliding windows built inside each split → DataLoaders → checks.
 
-**Outputs:** `models/scaler.joblib`, `plots/verify_pipeline.png`.
+**Outputs:** `models/scaler.joblib`, plus the check plot shown on screen.
 
 ### 4. Rebuild the PDF reports (optional)
 
 ```bash
 python report/build_report.py
 ```
+
+Figures are drawn into a temporary folder and deleted once the PDFs are written, so
+no image files are left in the project - every figure lives inside the PDFs.
 
 ---
 
@@ -147,7 +149,6 @@ Three PDFs are committed at the repository root, all generated from `report/`:
 data/raw/            1,250 original VM files  (not in git — download separately)
 data/processed/      survey table and clean CSV  (not in git — regenerated in seconds)
 models/              scaler.joblib, later the trained model  (not in git)
-plots/               every figure the scripts produce  (not in git - regenerated)
 report/              HTML sources, SVG diagrams and the PDF build script
 utils/
   explore.py         survey all VMs, rank them, draw the comparison plots

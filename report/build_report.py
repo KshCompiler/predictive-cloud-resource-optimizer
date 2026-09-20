@@ -10,10 +10,11 @@ Run from the project root:
     report/summary.html ->  Quick_Summary.pdf               (the short version)
 
 Steps:
-  1. make_figs.py regenerates the report-only figures into plots/
-     (plots/top_vms.png and plots/cpu_distribution.png come from
-      `python -m utils.explore`, plots/270_week.png from utils.load_data,
-      plots/verify_pipeline.png from utils.preprocessing - run those first)
+  1. make_figs.py draws every figure into a temporary folder, which is
+     deleted once the PDFs are built - the images live inside the PDFs, not
+     in the project. It needs data/processed/vm_survey.csv and
+     data/processed/270_clean.csv, so run utils.explore and utils.load_data
+     first if those are missing.
   2. {{CSS}}, {{IMG:...}} and {{SVG:...}} tokens are replaced with the shared
      stylesheet, base64-embedded PNGs and the SVG diagrams from diagrams.py
   3. headless Chrome/Edge prints each page to an A4 PDF
@@ -21,8 +22,10 @@ Steps:
 import base64
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -51,12 +54,17 @@ def find_browser():
     raise SystemExit("No Chrome or Edge found - install one, or add its path above.")
 
 
+FIGURE_DIR = None   # set to the temporary folder while the PDFs are built
+
+
 def embed_image(match):
     """Replace {{IMG:plots/x.png}} with a <figure> holding the base64 image."""
     rel = match.group(1)
-    path = os.path.join(ROOT, rel.replace("/", os.sep))
+    # the HTML refers to figures as plots/<name>.png; they actually sit in
+    # whatever temporary folder this run is using
+    path = os.path.join(FIGURE_DIR, os.path.basename(rel))
     if not os.path.exists(path):
-        raise SystemExit(f"missing figure {rel} - run the script that makes it first")
+        raise SystemExit(f"figure {rel} was not generated")
     with open(path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode("ascii")
     return f'<figure><img src="data:image/png;base64,{b64}" alt="{rel}">'
@@ -101,19 +109,26 @@ def print_pdf(html_path, pdf_path):
 
 
 def main():
-    print("[1/2] regenerating report figures")
-    subprocess.run([sys.executable, os.path.join(HERE, "make_figs.py")],
-                   cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
+    global FIGURE_DIR
+    FIGURE_DIR = tempfile.mkdtemp(prefix="report-figures-")
 
-    print("[2/2] building PDFs")
-    for source, pdf_name in DOCUMENTS:
-        built = os.path.join(HERE, source.replace(".html", "_built.html"))
-        with open(built, "w", encoding="utf-8") as f:
-            f.write(build_html(source))
-        pdf = os.path.join(ROOT, pdf_name)
-        print_pdf(built, pdf)
-        os.remove(built)
-        print(f"  wrote {pdf_name}  ({os.path.getsize(pdf) // 1024} KB)")
+    try:
+        print("[1/2] drawing figures (temporary - deleted at the end)")
+        subprocess.run([sys.executable, os.path.join(HERE, "make_figs.py"), FIGURE_DIR],
+                       cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
+
+        print("[2/2] building PDFs")
+        for source, pdf_name in DOCUMENTS:
+            built = os.path.join(HERE, source.replace(".html", "_built.html"))
+            with open(built, "w", encoding="utf-8") as f:
+                f.write(build_html(source))
+            pdf = os.path.join(ROOT, pdf_name)
+            print_pdf(built, pdf)
+            os.remove(built)
+            print(f"  wrote {pdf_name}  ({os.path.getsize(pdf) // 1024} KB)")
+    finally:
+        shutil.rmtree(FIGURE_DIR, ignore_errors=True)
+        print("figures cleaned up - the images now live only inside the PDFs")
 
 
 if __name__ == "__main__":

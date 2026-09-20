@@ -10,6 +10,7 @@ Run it like this:
     python -m utils.load_data data/raw/270.csv
 """
 
+import os
 import sys
 
 import pandas as pd
@@ -17,6 +18,19 @@ import matplotlib.pyplot as plt
 
 # The raw file has long, awkward column names.
 # This dictionary says: "if you see this long name, rename it to this short one".
+def ensure_folder(filepath):
+    """
+    Make the folder a file is about to be written into, if it is missing.
+
+    data/processed, models and plots are all left out of git - they only hold
+    generated files - so a fresh clone does not have them and saving would
+    fail. This creates them on demand.
+    """
+    folder = os.path.dirname(filepath)
+    if folder:
+        os.makedirs(folder, exist_ok=True)
+
+
 COLUMN_NAMES = {
     "Timestamp [ms]": "timestamp",
     "CPU usage [%]": "cpu_percent",
@@ -115,6 +129,7 @@ def load_vm(filepath, save=True):
         # Turn "data/raw/214.csv" into just "214"
         vm_name = filepath.split("/")[-1].split("\\")[-1].replace(".csv", "")
         out_path = f"data/processed/{vm_name}_clean.csv"
+        ensure_folder(out_path)
         clean.to_csv(out_path)
         print(f"saved: {out_path}")
 
@@ -126,8 +141,14 @@ def load_clean(filepath):
     return pd.read_csv(filepath, index_col=0, parse_dates=True)
 
 
-def plot_week(df, title, save_path):
-    """Draw 3 charts (cpu, mem, net) for the first week of data."""
+def plot_week(df, title, save_path=None):
+    """
+    Draw 3 charts (cpu, mem, net) for the first week of data.
+
+    Nothing is written to disk unless save_path is given. The figures belong
+    in the PDFs, which embed their own copies, so we do not leave PNG files
+    lying around the project folder.
+    """
 
     week = df.iloc[:STEPS_IN_ONE_WEEK]
 
@@ -147,8 +168,10 @@ def plot_week(df, title, save_path):
     axes[0].set_title(f"{title} - one week")
 
     fig.tight_layout()
-    fig.savefig(save_path, dpi=130)
-    print(f"saved: {save_path}")
+    if save_path:
+        ensure_folder(save_path)
+        fig.savefig(save_path, dpi=130)
+        print(f"saved: {save_path}")
     return fig
 
 
@@ -172,5 +195,5 @@ if __name__ == "__main__":
     print(df.describe())
 
     vm_name = filepath.split("/")[-1].replace(".csv", "")
-    plot_week(df, f"VM {vm_name}", f"plots/{vm_name}_week.png")
+    plot_week(df, f"VM {vm_name}")
     plt.show()

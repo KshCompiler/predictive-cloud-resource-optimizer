@@ -1,4 +1,15 @@
-"""Generate the report figures for the Steps 1.1-1.3 documentation PDF."""
+"""
+Generate every figure the PDFs need, into the folder given as the first
+argument (default: a folder called "plots").
+
+    python report/make_figs.py <folder>
+
+build_report.py passes a temporary folder and deletes it afterwards, so no
+image files are left in the project - the PDFs carry their own copies.
+"""
+
+import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
@@ -31,9 +42,21 @@ plt.rcParams.update({
     "axes.spines.right": False,
 })
 
-OUT = "plots"
-survey = pd.read_csv("data/processed/vm_survey.csv")
-clean = pd.read_csv("data/processed/270_clean.csv", index_col=0, parse_dates=True)
+OUT = sys.argv[1] if len(sys.argv) > 1 else "plots"
+os.makedirs(OUT, exist_ok=True)
+
+# this file lives in report/, so the project root has to be on the import path
+# before "from utils... import ..." further down can work
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+SURVEY_CSV = "data/processed/vm_survey.csv"
+CLEAN_CSV = "data/processed/270_clean.csv"
+for needed in (SURVEY_CSV, CLEAN_CSV):
+    if not os.path.exists(needed):
+        raise SystemExit(f"missing {needed} - run utils.explore and utils.load_data first")
+
+survey = pd.read_csv(SURVEY_CSV)
+clean = pd.read_csv(CLEAN_CSV, index_col=0, parse_dates=True)
 
 
 # --- FIG 1: why VM selection is needed --------------------------------------
@@ -200,3 +223,22 @@ fig.tight_layout()
 fig.savefig(f"{OUT}/fig_correlation.png", dpi=170)
 plt.close(fig)
 print("saved fig_correlation.png")
+
+
+# --- the remaining figures come from the pipeline modules themselves --------
+# (drawn here so that one command produces everything the PDFs embed)
+from utils.explore import plot_top_vms, plot_distribution      # noqa: E402
+from utils.load_data import load_clean, plot_week              # noqa: E402
+from utils.preprocessing import verify_pipeline                # noqa: E402
+
+plot_top_vms(survey, save_path=f"{OUT}/top_vms.png")
+plt.close("all")
+
+plot_distribution(survey, save_path=f"{OUT}/cpu_distribution.png")
+plt.close("all")
+
+plot_week(load_clean(CLEAN_CSV), "VM 270", save_path=f"{OUT}/270_week.png")
+plt.close("all")
+
+verify_pipeline(CLEAN_CSV, show=False, save_path=f"{OUT}/verify_pipeline.png")
+plt.close("all")

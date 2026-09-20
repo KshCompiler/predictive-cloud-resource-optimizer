@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import TensorDataset, DataLoader
 
-from utils.load_data import load_clean
+from utils.load_data import load_clean, ensure_folder
 
 WINDOW_SIZE = 60     # look at 60 rows (5 hours) of history
 BATCH_SIZE = 64
@@ -113,6 +113,7 @@ def build_pipeline(filepath, window_size=WINDOW_SIZE, batch_size=BATCH_SIZE):
 
     # Save the scaler. Later, the dashboard needs this exact scaler to turn
     # the model's 0-1 predictions back into real CPU%, memory%, and KB/s.
+    ensure_folder("models/scaler.joblib")
     joblib.dump(scaler, "models/scaler.joblib")
 
     # C. cut each part into windows, one at a time
@@ -133,7 +134,8 @@ def build_pipeline(filepath, window_size=WINDOW_SIZE, batch_size=BATCH_SIZE):
 
 
 # ---------------------------------------------------------------- STEP E ---
-def verify_pipeline(filepath, window_size=WINDOW_SIZE, batch_size=BATCH_SIZE, show=True):
+def verify_pipeline(filepath, window_size=WINDOW_SIZE, batch_size=BATCH_SIZE,
+                    show=True, save_path=None):
     """
     Prove that steps A-D actually worked, before we waste time training a model.
 
@@ -183,8 +185,10 @@ def verify_pipeline(filepath, window_size=WINDOW_SIZE, batch_size=BATCH_SIZE, sh
     axes[0].set_title("These two lines should sit exactly on top of each other")
     axes[2].set_xlabel("step number inside the window")
     fig.tight_layout()
-    fig.savefig("plots/verify_pipeline.png", dpi=130)
-    print("    saved: plots/verify_pipeline.png")
+    if save_path:
+        ensure_folder(save_path)
+        fig.savefig(save_path, dpi=130)
+        print(f"    saved: {save_path}")
 
     # --- CHECK 3: a summary of how much data ended up where ---
     print("\n[3] data summary")

@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from utils.load_data import load_vm, STEPS_IN_ONE_WEEK
+from utils.load_data import load_vm, ensure_folder, STEPS_IN_ONE_WEEK
 
 HOW_MANY_FILES = 1250    # how many VM files to check (there are 1250 total)
 MIN_ROWS = 2000          # skip VMs with too little data to see a pattern
@@ -190,7 +190,7 @@ def survey(how_many=HOW_MANY_FILES):
     return table.reset_index(drop=True)
 
 
-def plot_top_vms(table, how_many=HOW_MANY_TO_PLOT, save_path="plots/top_vms.png"):
+def plot_top_vms(table, how_many=HOW_MANY_TO_PLOT, save_path=None):
     """
     Draw the most variable VMs that are in the 20-60% range, so we can pick
     one by eye.
@@ -259,8 +259,10 @@ def plot_top_vms(table, how_many=HOW_MANY_TO_PLOT, save_path="plots/top_vms.png"
 
     axes[-1][1].set_xlabel("hour of day")
     fig.tight_layout()
-    fig.savefig(save_path, dpi=130)
-    print(f"\nsaved: {save_path}")
+    if save_path:
+        ensure_folder(save_path)
+        fig.savefig(save_path, dpi=130)
+        print(f"\nsaved: {save_path}")
     return fig
 
 
@@ -284,7 +286,7 @@ def pick_best_average_worst(table):
     return best, average, worst
 
 
-def plot_distribution(table, save_path="plots/cpu_distribution.png"):
+def plot_distribution(table, save_path=None):
     """
     Compare how the CPU readings are spread out for the best, an average and
     the worst VM.
@@ -382,8 +384,10 @@ def plot_distribution(table, save_path="plots/cpu_distribution.png"):
     axes[-1].set_xlim(-2, 108)
     axes[-1].set_xlabel("CPU usage (%)        (grey: above 100% - a recording quirk of the dataset)")
     fig.tight_layout()
-    fig.savefig(save_path, dpi=130)
-    print(f"saved: {save_path}")
+    if save_path:
+        ensure_folder(save_path)
+        fig.savefig(save_path, dpi=130)
+        print(f"saved: {save_path}")
     return fig
 
 
@@ -412,6 +416,7 @@ if __name__ == "__main__":
               f"train/val/test part, {len(dead_mem)} with dead memory, "
               f"{len(dead_net)} with dead network.")
 
+        ensure_folder("data/processed/vm_survey.csv")
         table.to_csv("data/processed/vm_survey.csv", index=False)
         print("saved: data/processed/vm_survey.csv")
 
