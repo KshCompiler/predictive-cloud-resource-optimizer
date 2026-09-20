@@ -147,7 +147,7 @@ Three PDFs are committed at the repository root, all generated from `report/`:
 data/raw/            1,250 original VM files  (not in git — download separately)
 data/processed/      survey table and clean CSV  (not in git — regenerated in seconds)
 models/              scaler.joblib, later the trained model  (not in git)
-plots/               every figure the scripts produce
+plots/               every figure the scripts produce  (not in git - regenerated)
 report/              HTML sources, SVG diagrams and the PDF build script
 utils/
   explore.py         survey all VMs, rank them, draw the comparison plots
