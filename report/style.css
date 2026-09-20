@@ -1,0 +1,115 @@
+/* Shared print styles for both PDFs. build_report.py inlines this file into each page. */
+:root{
+  --blue:#2a78d6; --orange:#eb6834; --aqua:#1baf7a; --red:#e34948; --yellow:#eda100;
+  --ink:#141413; --ink2:#4f4e49; --muted:#8a8981;
+  --rule:#dcdbd4; --surface:#ffffff; --panel:#f5f4ef;
+}
+@page { size: A4; margin: 15mm 15mm 16mm 15mm; }
+
+*{ box-sizing:border-box; }
+body{
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 10.3pt; line-height: 1.5; color: var(--ink);
+  background: var(--surface); margin:0;
+}
+
+.page-break{ break-before: page; }
+/* a part that continues on the same page gets breathing room above its heading */
+section.flow > h2{ margin-top:10mm; }
+
+h2{
+  font-size:18pt; font-weight:700; letter-spacing:-0.3px;
+  margin:0 0 3mm 0; padding-bottom:2mm; border-bottom:2.5px solid var(--ink);
+  break-after: avoid;
+}
+h2 .num{ color:var(--blue); margin-right:3mm; }
+h3{ font-size:12.5pt; font-weight:700; margin:5mm 0 1.8mm 0; break-after: avoid; }
+h4{
+  font-size:10pt; font-weight:700; margin:4.5mm 0 1.5mm 0; color:var(--ink2);
+  text-transform:uppercase; letter-spacing:0.7px; break-after: avoid;
+}
+p{ margin:0 0 3mm 0; }
+ul,ol{ margin:0 0 3mm 0; padding-left:6mm; }
+li{ margin-bottom:1.1mm; }
+b, strong{ font-weight:700; }
+.mono, code{ font-family:"Consolas","DejaVu Sans Mono",monospace; font-size:9.4pt; }
+code{ background:var(--panel); padding:0.2mm 1.3mm; border-radius:2px; }
+.lead{ font-size:12pt; line-height:1.6; color:var(--ink2); margin-bottom:5mm; }
+.small{ font-size:9.2pt; color:var(--ink2); }
+
+/* ---------- cover ---------- */
+.cover{ height:263mm; display:flex; flex-direction:column; }
+.cover-rule{ height:7px; background:var(--blue); margin-bottom:10mm; }
+.kicker{ font-size:9.5pt; letter-spacing:2.5px; text-transform:uppercase; color:var(--ink2); margin-bottom:5mm; }
+.cover h1{ font-size:32pt; line-height:1.12; font-weight:700; letter-spacing:-1px; margin:0 0 5mm 0; }
+.cover .sub{ font-size:14pt; color:var(--ink2); line-height:1.5; margin-bottom:11mm; max-width:160mm; }
+.cover-meta{ display:grid; grid-template-columns:1fr 1fr; gap:6mm 10mm; border-top:1px solid var(--rule); padding-top:6mm; }
+.cover-meta .k{ display:block; font-size:8pt; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); margin-bottom:1mm; }
+.cover-meta .v{ font-size:11pt; }
+.cover-foot{ margin-top:auto; font-size:9pt; color:var(--ink2); border-top:1px solid var(--rule); padding-top:4mm; }
+
+/* ---------- boxes ---------- */
+.box{ background:var(--panel); border-left:4px solid var(--blue); padding:3mm 4.5mm; margin:3.5mm 0; break-inside:avoid; }
+.box.warn{ border-left-color:var(--orange); }
+.box.ok{ border-left-color:var(--aqua); }
+.box.bad{ border-left-color:var(--red); }
+.box .lab{ display:block; font-size:8.4pt; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--ink2); margin-bottom:1.5mm; }
+.box p:last-child, .box ul:last-child{ margin-bottom:0; }
+
+.oneline{ border:2px solid var(--blue); border-radius:6px; padding:3mm 5mm; margin:4mm 0; font-size:12pt; break-inside:avoid; }
+.oneline b.tag{ color:var(--blue); margin-right:2mm; }
+
+/* decision card: What / Why / If not */
+.card{ border:1px solid var(--rule); border-radius:6px; margin:2.8mm 0; break-inside:avoid; overflow:hidden; }
+.card .head{ background:var(--panel); padding:2mm 4.5mm; font-weight:700; font-size:11.2pt; border-bottom:1px solid var(--rule); }
+.card .head .pick{ float:right; font-family:"Consolas",monospace; font-weight:400; font-size:10pt; color:var(--blue); }
+.card .body{ display:grid; grid-template-columns:22mm 1fr; gap:1mm 3mm; padding:2.4mm 4.5mm; }
+.card .body .k{ font-size:8.4pt; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding-top:0.6mm; }
+.card .body .k.why{ color:#0d6b48; }
+.card .body .k.ifnot{ color:#b23b3a; }
+
+/* Q and A */
+.qa{ margin:2.8mm 0; break-inside:avoid; }
+.qa .q{ font-weight:700; font-size:11.2pt; margin-bottom:1mm; }
+.qa .q::before{ content:"Q. "; color:var(--blue); }
+.qa .a{ padding-left:6mm; }
+
+/* glossary */
+.gloss{ display:grid; grid-template-columns:40mm 1fr; border-top:1px solid var(--rule); margin:3mm 0; }
+.gloss > div{ padding:1.7mm 2mm; border-bottom:1px solid var(--rule); break-inside:avoid; }
+.gloss .t{ font-weight:700; }
+
+/* ---------- tables ---------- */
+table{ width:100%; border-collapse:collapse; margin:3mm 0 4mm 0; font-size:10pt; break-inside:auto; }
+thead{ display:table-header-group; }
+tr{ break-inside:avoid; }
+thead th{ font-size:8.4pt; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--ink2);
+  text-align:left; padding:2mm 2.5mm; border-bottom:1.8px solid var(--ink); }
+tbody td{ padding:1.7mm 2.5mm; border-bottom:1px solid var(--rule); vertical-align:top; }
+tbody tr:nth-child(even){ background:#faf9f5; }
+td.num, th.num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+/* ---------- figures ---------- */
+figure{ margin:4mm 0; break-inside:avoid; }
+figure img{ width:100%; display:block; border:1px solid var(--rule); }
+figcaption{ font-size:9.2pt; color:var(--ink2); margin-top:2mm; line-height:1.5; }
+figcaption b{ color:var(--ink); }
+.svgfig{ border:1px solid var(--rule); padding:4mm 3mm; break-inside:avoid; margin:4mm 0; }
+.svgfig svg{ display:block; width:100%; height:auto; }
+svg text{ font-family:"Segoe UI",Arial,sans-serif; }
+
+pre{ font-family:"Consolas","DejaVu Sans Mono",monospace; font-size:8.6pt; line-height:1.45;
+  background:var(--panel); border:1px solid var(--rule); border-left:3px solid var(--ink2);
+  padding:3mm 4mm; margin:3mm 0 4mm 0; white-space:pre-wrap; break-inside:avoid; }
+pre .c{ color:var(--muted); }
+pre b{ color:var(--blue); }
+
+.pill{ font-size:8pt; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; padding:0.6mm 2.2mm; border-radius:9px; white-space:nowrap; }
+.pill.done{ background:#d7f0e4; color:#0d6b48; }
+.pill.part{ background:#fde3d6; color:#9c3d13; }
+.pill.todo{ background:#e8e7e0; color:#55544d; }
+
+.steps{ counter-reset: s; list-style:none; padding-left:0; }
+.steps > li{ counter-increment:s; position:relative; padding-left:10mm; margin-bottom:2.5mm; }
+.steps > li::before{ content:counter(s); position:absolute; left:0; top:0.3mm; width:6.5mm; height:6.5mm; border-radius:50%;
+  background:var(--blue); color:#fff; font-weight:700; font-size:9pt; text-align:center; line-height:6.5mm; }

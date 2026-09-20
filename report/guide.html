@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project Explained Simply - Predictive Cloud Resource Optimizer</title>
+<style>{{CSS}}</style>
+</head>
+<body>
+
+<!-- ============================== COVER ============================== -->
+<section class="cover">
+  <div class="cover-rule"></div>
+  <div class="kicker">Mini Project &middot; Phase 1 &middot; Study Guide</div>
+  <h1>The Project,<br>Explained Simply</h1>
+  <div class="sub">
+    Everything done so far, every decision and <b>why</b> it was made, and the
+    questions you may be asked &mdash; written in plain words so you can
+    explain it to anyone.
+  </div>
+  <div class="cover-meta">
+    <div><span class="k">Project</span><span class="v">Predictive Cloud Resource Optimizer</span></div>
+    <div><span class="k">Covers</span><span class="v">Steps 1.1, 1.2 and 1.3</span></div>
+    <div><span class="k">Data</span><span class="v">Bitbrains fastStorage &mdash; 1,250 real servers</span></div>
+    <div><span class="k">Chosen server</span><span class="v">VM 270</span></div>
+  </div>
+  <div class="cover-foot">
+    <b>How to use this guide.</b> Read Part 1 and Part 2 first &mdash; they give you the
+    big idea and the words you need. After that, each part covers one piece of
+    work. Every decision is written as <b>What we chose</b>, <b>Why</b>, and
+    <b>What goes wrong if we don't</b>. Part 10 has likely teacher questions
+    with short answers.
+  </div>
+</section>
+
+<!-- ============================== PART 1 ============================== -->
+<section class="page-break">
+<h2><span class="num">1</span>The big idea</h2>
+
+<div class="oneline"><b class="tag">In one line:</b> We predict how busy a server will be
+5 minutes from now, so we can add more computers <i>before</i> it gets overloaded,
+not after.</div>
+
+<h3>The problem</h3>
+<p>
+Websites and apps run on servers in the cloud. The number of users keeps changing.
+When many users come at once (a "spike"), the server gets overloaded and the app becomes slow.
+</p>
+<p>
+The usual fix is <b>auto-scaling</b>: when the server gets too busy, the system starts
+another server to share the work. Most systems do this <b>reactively</b> &mdash; they
+wait until CPU crosses a limit (for example 75%) and then react.
+</p>
+<p>
+The trouble: a new server takes about <b>60 to 90 seconds</b> to start and become
+ready. So by the time help arrives, users have already suffered the slowdown.
+</p>
+
+<div class="box">
+  <span class="lab">A simple example</span>
+  <p>
+    Think of a shop. A <b>reactive</b> manager calls extra staff only when the queue is
+    already long &mdash; the staff take 15 minutes to arrive, so customers wait.
+    A <b>proactive</b> manager knows the lunch rush starts at 1 pm and calls staff at
+    12:45 &mdash; they are ready when the rush begins. Our project is the proactive manager.
+  </p>
+</div>
+
+<h3>Our solution</h3>
+<p>
+We use an <b>LSTM</b> &mdash; a type of neural network that is good at learning from
+data that changes over time. It looks at the last 5 hours of server activity and
+predicts the next 5 minutes. If it predicts a spike, we add servers early.
+</p>
+
+{{SVG:reactive_proactive}}
+
+<h3>What we must prove at the end</h3>
+<p>
+The whole project exists to produce one comparison: <b>proactive scaling</b> (using our
+prediction) versus <b>reactive scaling</b> (using the current reading). We will measure:
+</p>
+<ul>
+  <li><b>Spike response time</b> &mdash; how quickly extra capacity is ready when a spike comes.</li>
+  <li><b>Over-provisioning</b> &mdash; how much extra capacity we paid for but did not need.</li>
+  <li><b>False positives</b> &mdash; how often we added servers for a spike that never came.</li>
+</ul>
+
+<h3>Two phases</h3>
+<ul>
+  <li><b>Phase 1 (this semester):</b> a complete normal (classical) system: data &rarr; LSTM &rarr; scaling &rarr; dashboard.</li>
+  <li><b>Phase 2 (next semester):</b> add a small <b>quantum circuit</b> (4 qubits, using PennyLane) inside the model, and compare it with Phase 1.</li>
+</ul>
+<p>
+Because Phase 2 will be compared with Phase 1, Phase 1 must be clean, correct and
+never thrown away. The quantum part will be inserted at one fixed point in the model:
+</p>
+
+{{SVG:phase_seam}}
+</section>
+
+<!-- ============================== PART 2 ============================== -->
+<section class="flow">
+<h2><span class="num">2</span>Words you need to know</h2>
+<p class="lead">Read these once. Every later part uses them.</p>
+
+<div class="gloss">
+  <div class="t">VM (virtual machine)</div><div>A "computer inside a computer". One big physical server is split into many VMs. In our dataset, each file is one VM.</div>
+  <div class="t">CPU usage %</div><div>How hard the processor is working. 0% = doing nothing, 100% = fully busy.</div>
+  <div class="t">Memory usage %</div><div>How much of the RAM given to the VM is in use.</div>
+  <div class="t">Network (KB/s)</div><div>How much data goes in and out of the VM each second.</div>
+  <div class="t">Time series</div><div>Readings taken one after another in time. Ours has one reading every 5 minutes.</div>
+  <div class="t">Mean</div><div>The average value. Add all readings and divide by how many there are.</div>
+  <div class="t">Standard deviation (std)</div><div>How much the values <b>spread out</b> from the mean. Small std = values stay close to the average (flat). Big std = values swing up and down a lot.</div>
+  <div class="t">Gaussian / bell curve</div><div>A bell-shaped picture of spread, where most values sit near the middle. Many datasets look like this; <b>ours does not</b>, so our graphs show the real readings instead (see Part 4).</div>
+  <div class="t">LSTM</div><div>"Long Short-Term Memory". A neural network that reads a sequence step by step and remembers what matters, so it can predict what comes next.</div>
+  <div class="t">Training / validation / test data</div><div><b>Training</b>: data the model learns from. <b>Validation</b>: data used while training to check it is not just memorising. <b>Test</b>: data kept hidden until the very end, for the final honest score.</div>
+  <div class="t">Scaling (normalisation)</div><div>Converting all numbers to the same range, here 0 to 1, so no column looks "more important" just because its numbers are bigger.</div>
+  <div class="t">Scaler</div><div>The object that remembers the minimum and maximum used for scaling, so we can convert predictions back to real units later.</div>
+  <div class="t">Window</div><div>A slice of consecutive readings given to the model as one example. Ours is 60 readings = 5 hours.</div>
+  <div class="t">Batch</div><div>A group of windows given to the model together. Ours is 64 windows per batch.</div>
+  <div class="t">Data leakage</div><div>When information from the test data sneaks into training. The model then looks better than it really is &mdash; like seeing exam answers before the exam.</div>
+  <div class="t">Tensor / DataLoader</div><div>A tensor is PyTorch's version of an array. A DataLoader hands tensors to the model one batch at a time.</div>
+  <div class="t">Resampling</div><div>Putting readings onto an exact, regular time grid (here every 5 minutes).</div>
+</div>
+
+<div class="box ok">
+  <span class="lab">The most important word: standard deviation</span>
+  <p>
+    Two VMs can both have a mean CPU of 50%. One stays at 50% all day (std close to 0).
+    The other jumps between 0% and 100% (std close to 50). Only the second one has
+    <b>changes</b> for a model to learn and predict. That is why std is the main
+    number we used to pick a VM.
+  </p>
+</div>
+</section>
+
+<!-- ============================== PART 3 ============================== -->
+<section class="flow">
+<h2><span class="num">3</span>The data</h2>
+
+<div class="oneline"><b class="tag">In one line:</b> Real monitoring data from 1,250 business
+servers, one reading every 5 minutes.</div>
+
+<h3>Where it comes from</h3>
+<p>
+<b>Bitbrains</b> was a Dutch hosting company. Its customers were banks and insurance
+companies running heavy jobs like financial reports and risk calculations.
+Researchers at <b>Delft University (TU Delft)</b> collected real readings from these
+servers, removed private details, and published them as the <b>GWA-T-12 Bitbrains</b>
+dataset. We use the <b>fastStorage</b> part: 1,250 VMs.
+</p>
+<div class="box">
+  <span class="lab">Credit we must give in the report</span>
+  <p>Shen, van Beek &amp; Iosup, "Statistical Characterization of Business-Critical
+  Workloads Hosted in Cloud Datacenters", CCGrid 2015. Data courtesy of Bitbrains IT Services.</p>
+</div>
+
+<h3>What is inside one file</h3>
+<p>
+Each VM is one CSV file with 11 columns, separated by <b>semicolons (;)</b>, not commas.
+We keep only what we need and turn it into 4 simple columns:
+</p>
+
+{{SVG:columns}}
+
+<h3>Why these three measurements</h3>
+<p>
+When a big job starts on a server, three things usually rise together:
+the <b>CPU</b> (the calculation runs), the <b>memory</b> (data is loaded), and the
+<b>network</b> (data is fetched or sent). They do not rise at exactly the same moment,
+but they are connected. A model that sees all three together can learn these
+connections, so it has more information than a model that sees CPU alone.
+</p>
+
+{{IMG:plots/fig_channels.png}}
+<figcaption><b>Picture.</b> About 29 hours of VM 270. Look at just after midnight
+on the right: CPU, memory and network all jump at the same time when a job starts.</figcaption>
+</section>
+
+<!-- ============================== PART 4 ============================== -->
+<section class="flow">
+<h2><span class="num">4</span>Choosing one VM to train on</h2>
+<p class="small">File: <code>utils/explore.py</code> &mdash; run with <code>python -m utils.explore</code></p>
+
+<div class="oneline"><b class="tag">In one line:</b> Most servers are almost idle, so we
+measured all 1,250 and picked a busy one whose load really changes.</div>
+
+<h3>Why we could not just take any file</h3>
+<p>
+Most VMs in this dataset do almost nothing. Their CPU looks like 2%, 2%, 3%, 2%, 1%...
+If we train on that, the model learns one lazy answer: "about 2%". It will even get a
+good-looking error score, because the answer really is almost always 2%. But it has
+learned nothing useful about spikes &mdash; and spikes are the whole point of our project.
+</p>
+
+{{IMG:plots/fig_vm_landscape.png}}
+<figcaption><b>Picture.</b> How busy all VMs are. Grey = rejected, blue = in our target range.
+<b>889 of 1,177 VMs (77%)</b> have an average CPU below 5%.</figcaption>
+
+<h3>The five rules we used</h3>
+<ol class="steps">
+  <li><b>Enough data:</b> at least 2,000 readings (about 7 days). Fewer than that is too short to see any pattern.
+      &rarr; 1,250 files became <b>1,177</b>.</li>
+  <li><b>Average CPU between 20% and 60%:</b> below 20% the VM is basically idle; above 60% it is basically always full. Both teach the model "always say the same number".
+      &rarr; <b>158</b> VMs passed.</li>
+  <li><b>Sort by standard deviation, biggest first:</b> the VM whose CPU moves the most has the most to learn from.</li>
+  <li><b>Check that all three parts move.</b> We keep the last 15% of the time as a hidden test set.
+      If the VM goes idle during that period, the test is a flat line and proves nothing.</li>
+  <li><b>Memory and network must not be dead.</b> The model predicts all three metrics, so a metric stuck on one value would be a column with nothing to learn. A metric is rejected if it never changes, or if one value covers more than 90% of its readings. &rarr; caught <b>12</b> VMs with dead memory and <b>225</b> with dead network across the dataset.</li>
+</ol>
+<p>&rarr; <b>20</b> rejected by these last checks, leaving <b>138</b> real candidates. The winner is
+<b>VM 270</b> (std 48.36).</p>
+
+<div class="box ok">
+  <span class="lab">Why the fourth rule exists</span>
+  <p>
+    We added it after being caught out. With the first three rules the winner was <b>VM 200</b>:
+    mean 43%, the highest std of all, no switched-off rows. It looked perfect. But its last
+    4.5 days are flat zero &mdash; and that is exactly the part kept back for testing. Training
+    would have worked and the test score would have been meaningless.
+  </p>
+  <p>
+    So <code>explore.py</code> now measures the three parts the way the model will use them and
+    rejects any VM where one of them does not move. VM 200 is rejected by its own numbers, not
+    by someone noticing.
+  </p>
+</div>
+
+{{SVG:funnel}}
+
+<h3>Best vs average vs worst &mdash; what std looks like</h3>
+<p>
+This graph is the easiest way to explain std. The <b>bars are the real readings</b>:
+for each CPU value, how often it actually happened. Drawn on top are the mean (orange line)
+and the mean ± 1 std band (blue), so you can see how far the readings normally swing.
+All three panels use the same x-axis, so the widths can be compared directly.
+</p>
+
+{{IMG:plots/cpu_distribution.png}}
+<figcaption>
+<b>How to explain it:</b>
+<b>BEST (VM 270, std 48.36)</b> &mdash; readings appear at both ends of the range, so the std band is very wide. There is real movement to learn.
+<b>AVERAGE (VM 419, std 0.63)</b> &mdash; a typical VM: 99% of its readings are in one 0&ndash;2% bar, so the band is a thin sliver.
+<b>WORST (VM 671, std 0.0)</b> &mdash; 100% of readings in one bar: no spread at all.
+</figcaption>
+
+<div class="box warn">
+  <span class="lab">Why there is no bell curve on this graph</span>
+  <p>
+    A bell curve (Gaussian) is the usual way to draw spread, but it assumes most values sit
+    near the middle. <b>Our data is not like that</b>, so drawing one would be misleading.
+    We checked VM 270: <b>53%</b> of its readings are at 0&ndash;2% and <b>39%</b> are above 98%.
+    That is <b>92% at the two extremes</b>, with the middle almost empty &mdash; two peaks, not
+    one hump. Only 60.5% of readings fall within ± 1 std, where a bell curve says 68.3%.
+  </p>
+  <p>
+    So the graph shows the <b>real bars</b>, and std is drawn on top as a band. Mean and std
+    are still correct numbers &mdash; they just describe how wide the spread is, not the shape.
+  </p>
+</div>
+
+<h3>Looking at the top VMs over one week</h3>
+<p>
+The table cannot show everything, so <code>explore.py</code> also draws the top 6 candidates.
+The left side is one week of CPU with the mean (orange line), the ±1 std band (blue shading)
+and the std arrow. The right side is the "average day": the mean CPU for each hour.
+</p>
+
+{{IMG:plots/top_vms.png}}
+<figcaption><b>Picture.</b> The top 6 candidates. Two things to notice: (1) they look almost identical
+&mdash; probably copies of the same batch job running on several machines, so choosing between them
+matters little; (2) the "average day" bars <b>do</b> show a daily rhythm: quiet in the morning, busiest
+in the evening. VM 270 averages 29% at 11:00 and 62% at 20:00.</figcaption>
+
+<h3>A mistake we found and fixed</h3>
+<div class="card">
+  <div class="head">Scan all 1,250 files, not the first 150 <span class="pick">all files</span></div>
+  <div class="body">
+    <div class="k">First plan</div><div>Check only the first 100&ndash;200 files to save time.</div>
+    <div class="k why">Why changed</div><div>Files are sorted by name as text, not as numbers: <code>1.csv, 10.csv, 100.csv, 1000.csv, 11.csv&hellip;</code> So "the first 150" is not a fair sample. On this dataset it found <b>zero</b> VMs in the 20&ndash;60% range.</div>
+    <div class="k ifnot">Result</div><div>Scanning everything found 158 in the band and took only about a minute.</div>
+  </div>
+</div>
+</section>
+
+<!-- ============================== PART 5 ============================== -->
+<section class="flow">
+<h2><span class="num">5</span>Cleaning the data</h2>
+<p class="small">File: <code>utils/load_data.py</code> &mdash; run with <code>python -m utils.load_data data/raw/270.csv</code></p>
+
+<div class="oneline"><b class="tag">In one line:</b> Turn one messy raw file into a clean
+table with exactly 4 columns and one row every 5 minutes.</div>
+
+{{SVG:loader}}
+
+<h3>Each step, and why</h3>
+<div class="card">
+  <div class="head">Read the file with <code>;</code> as the separator</div>
+  <div class="body">
+    <div class="k why">Why</div><div>Bitbrains files use semicolons. Reading them as normal comma files would put everything into one column.</div>
+  </div>
+</div>
+<div class="card">
+  <div class="head">Fix the timestamp unit automatically</div>
+  <div class="body">
+    <div class="k">What</div><div>The column is named "Timestamp [ms]" (milliseconds), but the numbers are really in <b>seconds</b>. The code checks the size of the numbers and picks the right unit.</div>
+    <div class="k ifnot">If not</div><div>Reading seconds as milliseconds puts all the data in January 1970.</div>
+  </div>
+</div>
+<div class="card">
+  <div class="head">Convert memory to a percentage</div>
+  <div class="body">
+    <div class="k">What</div><div><code>mem = memory used &divide; memory given &times; 100</code></div>
+    <div class="k why">Why</div><div>Raw memory is in KB &mdash; numbers in the millions. CPU is 0&ndash;100. The model would treat memory as far more important just because its numbers are bigger.</div>
+  </div>
+</div>
+<div class="card">
+  <div class="head">Add network in + network out</div>
+  <div class="body">
+    <div class="k why">Why</div><div>For predicting load, the total amount of network activity matters. The direction (in or out) does not.</div>
+  </div>
+</div>
+<div class="card">
+  <div class="head">Clip CPU and memory to 0&ndash;100</div>
+  <div class="body">
+    <div class="k why">Why</div><div>Some raw readings are slightly above 100% (up to 105.88%). A percentage above 100 is a recording error, so it is set to 100.</div>
+  </div>
+</div>
+<div class="card">
+  <div class="head">Put every row exactly 5 minutes apart (resampling)</div>
+  <div class="body">
+    <div class="k why">Why</div><div>Raw readings are not perfectly spaced (sometimes 4 minutes, sometimes 6). The model needs every step to mean the same amount of time.</div>
+  </div>
+</div>
+<div class="card">
+  <div class="head">Handle missing readings: short gaps filled, long gaps removed <span class="pick">limit: 3 steps</span></div>
+  <div class="body">
+    <div class="k">What</div><div>A gap of up to 15 minutes (3 readings) is filled by copying the last known value. Longer gaps are deleted, never guessed.</div>
+    <div class="k why">Why</div><div>Copying a value for 15 minutes is a small, safe guess. Inventing hours of data would teach the model load patterns that never happened.</div>
+  </div>
+</div>
+
+<h3>What happened on VM 270</h3>
+<table>
+  <thead><tr><th>Result</th><th class="num">Value</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td>Clean rows kept</td><td class="num">8,640</td><td>Exactly 30.0 days of data</td></tr>
+    <tr><td>Short gaps filled</td><td class="num">21</td><td>Small holes of 15 minutes or less</td></tr>
+    <tr><td>Rows deleted</td><td class="num">0</td><td>VM 270 was never switched off</td></tr>
+    <tr><td>Time jumps left in the data</td><td class="num">0</td><td>Every row is exactly 5 minutes after the previous one</td></tr>
+  </tbody>
+</table>
+
+<div class="box ok">
+  <span class="lab">Nothing had to be deleted &mdash; and why that matters</span>
+  <p>
+    VM 270 ran for the whole month, so no rows were dropped and the clean series has
+    <b>zero</b> time jumps: 8,639 steps, every one exactly 5 minutes.
+  </p>
+  <p>
+    Our first choice, VM 214, was different: 1,329 of its rows had to be deleted because the VM was
+    switched off for its last 4.6 days, with every reading at 0. That discovery is what led us to fix
+    the survey (Part 8), because those zeros were also being counted as "0% busy" when choosing a VM.
+  </p>
+</div>
+
+<h3>The clean result</h3>
+{{IMG:plots/270_week.png}}
+<figcaption><b>Picture.</b> One week of clean VM 270 data: CPU (blue), memory (orange), network (green).</figcaption>
+
+{{IMG:plots/fig_cpu_hist.png}}
+<figcaption><b>Picture.</b> How often each CPU value appears in the clean data. Almost everything is at
+0% or 100%. VM 270 is a <b>batch machine</b>: it is either idle or running a job at full power.</figcaption>
+</section>
+
+<!-- ============================== PART 6 ============================== -->
+<section class="flow">
+<h2><span class="num">6</span>Preparing the data for the model</h2>
+<p class="small">File: <code>utils/preprocessing.py</code> &mdash; run with <code>python -m utils.preprocessing</code></p>
+
+<div class="oneline"><b class="tag">In one line:</b> Split the data by time, scale it,
+cut it into 5-hour windows, and pack it into batches &mdash; <i>in exactly that order</i>.</div>
+
+{{SVG:preprocess}}
+
+<h3>Step A &mdash; Split by time: 70% / 15% / 15%</h3>
+<p>
+The first 70% of the days is for training, the next 15% for validation, the last 15% for testing.
+We cut by <b>position in time</b>, never randomly.
+</p>
+<div class="box">
+  <span class="lab">Why not random?</span>
+  <p>
+    In real life we only know the past. If we mixed rows randomly, the model would train on
+    Tuesday and be tested on Monday &mdash; it would be "predicting" the past with knowledge
+    of the future. The score would look great and mean nothing.
+  </p>
+</div>
+{{IMG:plots/fig_split.png}}
+<figcaption><b>Picture.</b> The split on VM 270's real CPU data. Test data is strictly the last part of the calendar.</figcaption>
+
+<h3>Step B &mdash; Scale to 0&ndash;1 using ONLY the training data</h3>
+<p>
+We use <code>MinMaxScaler</code>. It learns the smallest and largest value from the
+<b>training</b> data only, then uses those same numbers to scale validation and test.
+</p>
+
+{{SVG:leakage}}
+
+<div class="box ok">
+  <span class="lab">How we can prove there was no leakage</span>
+  <p>
+    After scaling, training data is exactly 0.00 to 1.00, but test data goes up to <b>1.91</b>.
+    That means the test data contains a value higher than anything the scaler saw.
+    This is <b>good</b>: it proves the scaler never looked at the test data.
+    If it had, the test data would also fit neatly between 0 and 1.
+  </p>
+</div>
+<p>
+The scaler is saved to <code>models/scaler.joblib</code>. Later the dashboard uses it
+to turn the model's 0&ndash;1 answers back into real CPU %, memory % and KB/s.
+</p>
+
+<h3>Step C &mdash; Cut into windows (inside each part separately)</h3>
+<p>
+Each training example is <b>60 readings in a row (5 hours)</b>, and the answer is the
+<b>next reading (5 minutes later)</b>. Then the window moves forward by one step.
+</p>
+
+{{SVG:windows}}
+
+<p>
+Windows are made separately for train, validation and test. A window that started in
+training data and ended in test data would again leak the future into training.
+</p>
+
+<h3>Step D &mdash; Batches</h3>
+<p>
+Windows are packed into batches of <b>64</b>. The training batches are <b>shuffled</b>;
+validation and test are not.
+</p>
+<div class="box">
+  <span class="lab">Wait &mdash; didn't we say never shuffle?</span>
+  <p>
+    We never shuffle the <b>readings</b>. Here we only shuffle the <b>order of whole windows</b>.
+    Inside each window the 60 readings are still in the correct time order. Shuffling the
+    order of examples helps the model learn more evenly. Validation and test stay in order
+    so we can plot predictions against real dates.
+  </p>
+</div>
+
+<table>
+  <thead><tr><th>Part</th><th class="num">Rows</th><th class="num">Windows</th><th class="num">Batches</th><th>Shuffled?</th></tr></thead>
+  <tbody>
+    <tr><td>Training (70%)</td><td class="num">6,048</td><td class="num">5,988</td><td class="num">94</td><td>Yes (window order only)</td></tr>
+    <tr><td>Validation (15%)</td><td class="num">1,296</td><td class="num">1,236</td><td class="num">20</td><td>No</td></tr>
+    <tr><td>Test (15%)</td><td class="num">1,296</td><td class="num">1,236</td><td class="num">20</td><td>No</td></tr>
+  </tbody>
+</table>
+<p class="small">Each part has 60 fewer windows than rows, because the first 60 rows are only used as history.</p>
+
+<h3>Step E &mdash; Check that everything worked</h3>
+<p>
+Mistakes in windowing or scaling do <b>not</b> crash the program. They quietly give the
+model bad data, and you only notice days later when results are poor. So
+<code>verify_pipeline()</code> checks three things before any training:
+</p>
+<table>
+  <thead><tr><th>Check</th><th>Expected</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Shape of one batch of inputs</td><td>(64, 60, 3)</td><td><span class="pill done">Pass</span> (64, 60, 3)</td></tr>
+    <tr><td>Shape of one batch of answers</td><td>(64, 3)</td><td><span class="pill done">Pass</span> (64, 3)</td></tr>
+    <tr><td>Scale window 0, un-scale it, compare with the original CSV</td><td>difference &asymp; 0</td><td><span class="pill done">Pass</span> 0.00024</td></tr>
+  </tbody>
+</table>
+<p class="small">The tiny 0.00024 difference comes from rounding: PyTorch stores numbers with fewer decimal places (float32) than the CSV (float64). A real bug would give differences of whole units.</p>
+
+{{IMG:plots/verify_pipeline.png}}
+<figcaption><b>Picture.</b> The original data (thick line) and the scaled-then-unscaled data (dashed line) sit exactly on top of each other.</figcaption>
+</section>
+
+<!-- ============================== PART 7 ============================== -->
+<section class="page-break">
+<h2><span class="num">7</span>Every decision in one place</h2>
+<p class="lead">If someone asks "why did you do it this way?", the answer is here.</p>
+
+<h3>About the data</h3>
+<div class="card"><div class="head">Use real data (Bitbrains) <span class="pick">1,250 VMs</span></div><div class="body">
+  <div class="k why">Why</div><div>Real business servers show how load really behaves. Results on real data are more believable.</div>
+  <div class="k ifnot">If not</div><div>Using only made-up data, nobody could be sure the system works in the real world.</div></div></div>
+
+<div class="card"><div class="head">Also build a synthetic (made-up) data generator <span class="pick">planned</span></div><div class="body">
+  <div class="k why">Why</div><div>To test proactive vs reactive scaling we need spikes at <b>known times</b>, so we can measure exactly how early we reacted. Real data only has whatever spikes happened.</div>
+  <div class="k ifnot">If not</div><div>The final comparison would depend on luck &mdash; whether the real data happened to contain clear spikes.</div></div></div>
+
+<div class="card"><div class="head">Use CPU, memory and network together <span class="pick">3 inputs</span></div><div class="body">
+  <div class="k why">Why</div><div>They rise together when a job starts. Seeing all three gives the model more clues.</div>
+  <div class="k ifnot">If not</div><div>A CPU-only model would miss early signs that show up in memory or network.</div></div></div>
+
+<div class="card"><div class="head">Keep the same 4-column format everywhere <span class="pick">datetime, cpu, mem, net</span></div><div class="body">
+  <div class="k why">Why</div><div>The real loader and the synthetic generator produce the same table, so every later step works with either one without changes.</div>
+  <div class="k ifnot">If not</div><div>Every later file would need separate code for real and synthetic data.</div></div></div>
+
+<h3>About choosing the VM</h3>
+<div class="card"><div class="head">Minimum readings <span class="pick">2,000</span></div><div class="body">
+  <div class="k why">Why</div><div>About 7 days &mdash; the least data where a repeating pattern could appear.</div>
+  <div class="k ifnot">If not</div><div>We might pick a VM with only a few hours of data.</div></div></div>
+
+<div class="card"><div class="head">Average CPU range <span class="pick">20% to 60%</span></div><div class="body">
+  <div class="k why">Why</div><div>Below 20% = idle, above 60% = always full. Both make the model learn one constant answer.</div>
+  <div class="k ifnot">If not</div><div>The model would score well but predict nothing useful.</div></div></div>
+
+<div class="card"><div class="head">Rank by standard deviation <span class="pick">highest first</span></div><div class="body">
+  <div class="k why">Why</div><div>Std measures how much the CPU moves. Movement is what the model must learn to predict.</div>
+  <div class="k ifnot">If not</div><div>We could pick a VM with a good average but a flat line.</div></div></div>
+
+<h3>About cleaning</h3>
+<div class="card"><div class="head">Fill gaps up to 15 minutes, delete longer gaps <span class="pick">3 steps</span></div><div class="body">
+  <div class="k why">Why</div><div>A short copy is a safe guess; long guesses would be fake data.</div>
+  <div class="k ifnot">If not</div><div>Either we lose many rows for tiny holes, or we invent hours of load that never happened.</div></div></div>
+
+<div class="card"><div class="head">Readings every 5 minutes <span class="pick">5 min</span></div><div class="body">
+  <div class="k why">Why</div><div>That is how often the dataset was recorded, and it is enough to see spikes building up.</div>
+  <div class="k ifnot">If not</div><div>Uneven spacing would confuse the model about how much time passes between readings.</div></div></div>
+
+<h3>About preparing for the model</h3>
+<div class="card"><div class="head">Split by time <span class="pick">70 / 15 / 15</span></div><div class="body">
+  <div class="k why">Why</div><div>The model must learn only from the past and be tested on the future, like in real use. 70/15/15 is a standard three-way split.</div>
+  <div class="k ifnot">If not</div><div>Random splitting leaks future information and gives a fake, too-good score.</div></div></div>
+
+<div class="card"><div class="head">Split first, then scale <span class="pick">order A &rarr; B</span></div><div class="body">
+  <div class="k why">Why</div><div>The scaler must learn min/max from training data only.</div>
+  <div class="k ifnot">If not</div><div>Test data's values influence training &mdash; data leakage. (The original project roadmap had this order wrong; we fixed it.)</div></div></div>
+
+<div class="card"><div class="head">MinMaxScaler <span class="pick">range 0&ndash;1</span></div><div class="body">
+  <div class="k why">Why</div><div>Neural networks learn more easily when inputs are small and in the same range. CPU and memory already have fixed limits (0&ndash;100), which suits a min&ndash;max scale.</div>
+  <div class="k ifnot">If not</div><div>Network values (up to about 12,850 KB/s) would dominate CPU and memory.</div></div></div>
+
+<div class="card"><div class="head">Window size <span class="pick">60 readings = 5 hours</span></div><div class="body">
+  <div class="k why">Why</div><div>Long enough to see a job start, run and finish. Not so long that training becomes slow and hard.</div>
+  <div class="k ifnot">If not</div><div>Too short: the model misses the build-up. Too long: slower training with little extra benefit.</div></div></div>
+
+<div class="card"><div class="head">Predict 1 step ahead <span class="pick">5 minutes</span></div><div class="body">
+  <div class="k why">Why</div><div>A new server needs 60&ndash;90 seconds to be ready. 5 minutes of warning covers that with room to spare.</div>
+  <div class="k ifnot">If not</div><div>A shorter warning would be too late to help.</div></div></div>
+
+<div class="card"><div class="head">Batch size <span class="pick">64</span></div><div class="body">
+  <div class="k why">Why</div><div>A common size that gives stable learning and fits easily in laptop memory. With 5,988 windows it gives 80 updates per pass through the data.</div>
+  <div class="k ifnot">If not</div><div>Very small batches learn noisily; very large ones use more memory.</div></div></div>
+
+<div class="card"><div class="head">Predict all 3 values, not only CPU <span class="pick">output 3</span></div><div class="body">
+  <div class="k why">Why</div><div>The scaling system needs to know whether a spike is CPU, memory or network, because each may need a different response.</div>
+  <div class="k ifnot">If not</div><div>The scaler could only react to CPU spikes.</div></div></div>
+
+<h3>About the setup</h3>
+<div class="card"><div class="head">Run everything on a laptop, offline <span class="pick">CPU only</span></div><div class="body">
+  <div class="k why">Why</div><div>No cloud account or GPU is needed. Anyone can repeat the work.</div>
+  <div class="k ifnot">If not</div><div>Results would depend on paid services.</div></div></div>
+
+<div class="card"><div class="head">Do not commit the data to GitHub <span class="pick">.gitignore</span></div><div class="body">
+  <div class="k why">Why</div><div>The dataset is about 128 MB; GitHub rejects it. The README will say where to download it instead.</div>
+  <div class="k ifnot">If not</div><div>The upload would fail.</div></div></div>
+</section>
+
+<!-- ============================== PART 8 ============================== -->
+<section class="flow">
+<h2><span class="num">8</span>Honest problems and limits</h2>
+<p class="lead">
+It is better to say these yourself than to be caught by a question. Each one has a
+simple explanation.
+</p>
+
+<div class="box bad">
+  <span class="lab">Found and fixed 1 &mdash; switched-off days were being counted</span>
+  <p>
+    When a VM is switched off, a row is still written every 5 minutes with every number at 0.
+    The survey counted those as "0% busy". Our first choice, <b>VM 214</b>, was switched off for
+    its last 4.6 days, and those zeros are the only reason it appeared to be inside the 20&ndash;60% band:
+  </p>
+  <table>
+    <thead><tr><th>VM 214</th><th class="num">Rows</th><th class="num">Mean CPU</th><th class="num">Std</th></tr></thead>
+    <tbody>
+      <tr><td>Counting switched-off rows</td><td class="num">11,283</td><td class="num">44.21%</td><td class="num">49.81</td></tr>
+      <tr><td>Only while it was running</td><td class="num">7,290</td><td class="num">68.43%</td><td class="num">46.71</td></tr>
+    </tbody>
+  </table>
+  <p>
+    68.43% is above our 60% limit, so VM 214 never qualified &mdash; and neither did the other five
+    VMs in its group. <code>explore.py</code> now skips rows where the memory given to the VM is 0.
+    We checked that rule on a 32-file sample first: in every such row, all the other numbers are 0 too.
+  </p>
+</div>
+
+<div class="box warn">
+  <span class="lab">Found and fixed 2 &mdash; the test period was never checked</span>
+  <p>
+    With the first fix in place the new winner was <b>VM 200</b>: the highest std of all, never
+    switched off. It looked ideal. But its last 4.5 days are flat zero &mdash; and that is exactly
+    the slice we keep back for testing. The model would have trained happily and the final score
+    would have been meaningless.
+  </p>
+  <p>
+    So the survey now measures train, validation and test separately and rejects any VM where one
+    of them does not move (see Part 4, rule 4). That is how we arrived at <b>VM 270</b>.
+  </p>
+</div>
+
+<div class="box warn">
+  <span class="lab">Found and fixed 3 &mdash; only CPU was ever checked</span>
+  <p>
+    The first four rules all look at CPU. But the model predicts memory and network too, so a VM
+    could pass every rule while one of those columns is a flat line &mdash; and we would be training
+    the model to predict nothing. Rules 5 and 6 now check both, judging each metric against itself
+    (dead = one value covering over 90% of readings) rather than against a fixed band, because
+    memory is a percentage while network is an unbounded KB/s rate.
+  </p>
+  <p>
+    Measured across the dataset: <b>12</b> VMs have dead memory and <b>225</b> have dead network.
+    None of them were in our final shortlist, so the chosen VM did not change &mdash; the checks are
+    insurance, and they turn a piece of luck into a rule.
+  </p>
+</div>
+
+<div class="box warn">
+  <span class="lab">Still open &mdash; the top candidates are near-copies</span>
+  <p>
+    VMs 270, 249, 263, 247, 285 and 279 look almost the same, so choosing between them does not
+    really matter. Ranking by std also favours on/off machines: a VM that is half the time at 0%
+    and half at 100% has a std of about 50, the highest possible. VM 270 is still that kind of
+    machine at the 5-minute level &mdash; 47% of readings at 0&ndash;2%, 36% above 98% &mdash; although
+    it does have a clear daily rhythm.
+  </p>
+</div>
+
+<div class="box">
+  <span class="lab">Smaller limits</span>
+  <ul>
+    <li><b>Only 25 days of data.</b> Enough for a small model, but not a lot.</li>
+    <li><b>One VM only.</b> The model will learn one machine's behaviour, not all servers.</li>
+    <li><b>Clipping at 100%</b> hides the difference between 100% and 105%.</li>
+  </ul>
+</div>
+
+<h3>Work still missing from Steps 1.1&ndash;1.3</h3>
+<table>
+  <thead><tr><th>Item</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td><code>git init</code> + first commit</td><td>There is no saved history of the work yet.</td></tr>
+    <tr><td><code>README.md</code></td><td>Tells others how to set up and where to download the data. It is the first thing an examiner opens.</td></tr>
+    <tr><td><code>utils/generate_data.py</code></td><td>The synthetic data is needed for the controlled spike test in Step 1.6.</td></tr>
+    <tr><td><code>notebooks/</code> and <code>dashboard/</code> folders</td><td>Part of the planned structure; needed later.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================== PART 9 ============================== -->
+<section class="flow">
+<h2><span class="num">9</span>The full picture, and what comes next</h2>
+
+{{SVG:pipeline}}
+
+<h3>Where we are</h3>
+<table>
+  <thead><tr><th>Step</th><th>What</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>1.1</td><td>Set up Python environment and folders</td><td><span class="pill part">Mostly done</span></td></tr>
+    <tr><td>1.2</td><td>Get the data, choose a VM, clean it</td><td><span class="pill part">Mostly done</span></td></tr>
+    <tr><td>1.3</td><td>Prepare the data for the model</td><td><span class="pill done">Done</span></td></tr>
+    <tr><td>1.4</td><td>Build and train the LSTM</td><td><span class="pill todo">Next</span></td></tr>
+    <tr><td>1.5</td><td>Measure accuracy and compare with a simple baseline</td><td><span class="pill todo">Later</span></td></tr>
+    <tr><td>1.6</td><td>Build proactive vs reactive auto-scaling and compare them</td><td><span class="pill todo">Later</span></td></tr>
+    <tr><td>1.7</td><td>Streamlit dashboard</td><td><span class="pill todo">Later</span></td></tr>
+    <tr><td>1.8</td><td>Put it all together, test, write the report</td><td><span class="pill todo">Later</span></td></tr>
+  </tbody>
+</table>
+
+<h3>What each next step will do, in simple words</h3>
+<ul>
+  <li><b>1.4 LSTM:</b> the model reads a 5-hour window (60 &times; 3 numbers) and outputs 3 numbers: predicted CPU, memory and network 5 minutes later.</li>
+  <li><b>1.5 Evaluation:</b> measure how wrong the predictions are (RMSE, MAE, MAPE). Compare with a "naive" guess like "next value = current value". If the LSTM can't beat that, it is not useful.</li>
+  <li><b>1.6 Scaling engine:</b> simulate adding servers. Reactive version uses real values; proactive version uses predictions. Compare response time, wasted capacity, and false alarms.</li>
+  <li><b>1.7 Dashboard:</b> a web page showing predicted vs actual load and when servers were added.</li>
+  <li><b>Phase 2:</b> put a 4-qubit quantum circuit between the LSTM and the final output layer, and compare with Phase 1.</li>
+</ul>
+</section>
+
+<!-- ============================== PART 10 ============================== -->
+<section class="flow">
+<h2><span class="num">10</span>Questions your teacher may ask</h2>
+
+<div class="qa"><div class="q">What does your project do, in one sentence?</div>
+<div class="a">It predicts server load 5 minutes ahead with an LSTM so that extra servers can be started before a traffic spike, instead of after it.</div></div>
+
+<div class="qa"><div class="q">Why is reactive scaling not good enough?</div>
+<div class="a">A new server takes 60&ndash;90 seconds to be ready. Reactive scaling only starts after the spike is seen, so users always face that delay.</div></div>
+
+<div class="qa"><div class="q">Why did you use this dataset?</div>
+<div class="a">It is real data from business servers (banks, insurers), openly published by TU Delft, and widely used in cloud research.</div></div>
+
+<div class="qa"><div class="q">Why not just use the first VM file?</div>
+<div class="a">76% of VMs are almost idle. A model trained on them just predicts "about 2%" and learns nothing about spikes. So we measured all 1,250 and chose a busy, changing one.</div></div>
+
+<div class="qa"><div class="q">What is standard deviation and why did you use it?</div>
+<div class="a">It measures how far values spread from the average. A high std means the CPU changes a lot, which is what the model needs to learn. The best/average/worst graph shows this: wide curve vs thin spike vs flat line.</div></div>
+
+<div class="qa"><div class="q">Is VM 270's CPU normally (Gaussian) distributed?</div>
+<div class="a">No, and we checked rather than assuming. 53% of readings are at 0&ndash;2% and 39% above 98% &mdash; 92% at the two extremes, so the shape has two peaks, not one hump. Only 60.5% fall within ± 1 std (a bell curve says 68.3%). That is why our graph shows the real readings as bars instead of a bell curve.</div></div>
+
+<div class="qa"><div class="q">Is VM 270 really the best choice?</div>
+<div class="a">Yes, after fixing two faults in the survey. The first choice, VM 214, only looked valid because its switched-off days were counted; while running it averaged 68%, outside our band. The next winner, VM 200, had a flat test period. VM 270 passes all four rules: 30 full days, never switched off, and all three parts move. (Part 8.)</div></div>
+
+<div class="qa"><div class="q">Why convert memory to a percentage?</div>
+<div class="a">Raw memory is in millions of KB and CPU is 0&ndash;100. Without converting, the model would think memory is more important just because the numbers are bigger.</div></div>
+
+<div class="qa"><div class="q">You deleted 1,329 rows. Is that a problem?</div>
+<div class="a">That was VM 214, our first choice. Those rows were all at the end of the file, when the VM was switched off and every reading was 0. VM 270, the VM we actually use, needed <b>no</b> rows deleted at all and has zero time gaps.</div></div>
+
+<div class="qa"><div class="q">What is data leakage and how did you prevent it?</div>
+<div class="a">Leakage is when test information sneaks into training. We prevent it three ways: split by time first; fit the scaler on training data only; make windows separately in each part. Proof: test data scales up to 1.91, outside 0&ndash;1, which only happens if the scaler never saw it.</div></div>
+
+<div class="qa"><div class="q">Why shuffle training data if it is a time series?</div>
+<div class="a">We shuffle only the order of whole 5-hour windows. The readings inside each window stay in time order.</div></div>
+
+<div class="qa"><div class="q">Why a window of 60?</div>
+<div class="a">60 readings &times; 5 minutes = 5 hours. That is long enough to see a job start and finish, but short enough to train quickly.</div></div>
+
+<div class="qa"><div class="q">How do you know the pipeline has no bugs?</div>
+<div class="a"><code>verify_pipeline()</code> checks batch shapes (64, 60, 3) and (64, 3), and un-scales a window to compare it with the original data. The difference is 0.00024, which is just rounding.</div></div>
+
+<div class="qa"><div class="q">Where will the quantum part go?</div>
+<div class="a">Between the LSTM's output and the final layer that makes the 3 predictions. Everything else stays the same, so Phase 1 is a fair comparison.</div></div>
+</section>
+
+<!-- ============================== PART 11 ============================== -->
+<section class="flow">
+<h2><span class="num">11</span>How to run each part</h2>
+<p class="lead">Examiners often say "show me this part running". Every file can run on its own.</p>
+
+<h4>Setup (once)</h4>
+<pre>python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt</pre>
+<p class="small">Download the Bitbrains fastStorage data and unzip the CSV files into <code>data/raw/</code>.</p>
+
+<h4>1. Survey all VMs and draw the comparison graphs</h4>
+<pre>python -m utils.explore          <span class="c"># shows the top 6</span>
+python -m utils.explore 10       <span class="c"># shows the top 10</span></pre>
+<p>You will see: a ranked table, and two saved pictures &mdash; <code>plots/top_vms.png</code> and
+<code>plots/cpu_distribution.png</code> (best / average / worst). Takes about 1&ndash;2 minutes.</p>
+
+<h4>2. Clean the chosen VM</h4>
+<pre>python -m utils.load_data data/raw/270.csv</pre>
+<p>You will see: rows kept, gaps fixed, the first rows, statistics, and a one-week plot saved to
+<code>plots/270_week.png</code>. The clean file is saved to <code>data/processed/270_clean.csv</code>.</p>
+
+<h4>3. Prepare and check the data for the model</h4>
+<pre>python -m utils.preprocessing</pre>
+<p>You will see: batch shapes, the reconstruction check, the row/window counts, and the scaled
+ranges. It saves <code>models/scaler.joblib</code> and <code>plots/verify_pipeline.png</code>.
+Takes a few seconds.</p>
+
+<h3>Files at a glance</h3>
+<table>
+  <thead><tr><th>File</th><th>Job</th></tr></thead>
+  <tbody>
+    <tr><td><code>utils/explore.py</code></td><td>Measure all VMs, rank them, draw comparison graphs</td></tr>
+    <tr><td><code>utils/load_data.py</code></td><td>Clean one raw VM file into 4 columns</td></tr>
+    <tr><td><code>utils/preprocessing.py</code></td><td>Split, scale, window, batch, and verify</td></tr>
+    <tr><td><code>data/processed/vm_survey.csv</code></td><td>The ranked table of all VMs</td></tr>
+    <tr><td><code>data/processed/270_clean.csv</code></td><td>Clean data for VM 270</td></tr>
+    <tr><td><code>models/scaler.joblib</code></td><td>Saved scaler for turning predictions back into real units</td></tr>
+  </tbody>
+</table>
+</section>
+
+</body>
+</html>

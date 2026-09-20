@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quick Summary - Steps 1.1 to 1.3</title>
+<style>
+{{CSS}}
+/* a little denser than the long documents, so this stays short */
+body{ font-size:10pt; line-height:1.45; }
+h2{ font-size:15pt; margin-bottom:2mm; }
+h3{ font-size:11.5pt; margin:4mm 0 1.5mm 0; }
+h4{ margin:3mm 0 1mm 0; }
+p{ margin:0 0 2.2mm 0; }
+li{ margin-bottom:0.8mm; }
+table{ font-size:9.4pt; margin:2mm 0 3mm 0; }
+tbody td{ padding:1.4mm 2.2mm; }
+.box{ padding:2.5mm 4mm; margin:2.5mm 0; }
+.svgfig{ padding:2.5mm 2mm; margin:3mm 0; }
+.two{ display:grid; grid-template-columns:1fr 1fr; gap:0 7mm; }
+</style>
+</head>
+<body>
+
+<!-- ============================ PAGE 1 ============================ -->
+<section>
+<h2><span class="num">1</span>The idea, in one page</h2>
+
+<div class="oneline"><b class="tag">The project:</b> predict a server's load 5 minutes ahead with an
+LSTM, so extra servers start <b>before</b> a spike instead of after it.</div>
+
+<h3>Why it is needed</h3>
+<ul>
+  <li>Cloud servers get sudden rushes of users. Normal auto-scaling <b>reacts</b>: it waits until CPU crosses a limit.</li>
+  <li>A new server needs <b>60&ndash;90 seconds</b> to start. So help always arrives after users feel the slowdown.</li>
+  <li>If we can <b>predict</b> the rush 5 minutes early, the new server is ready before it lands.</li>
+</ul>
+
+{{SVG:reactive_proactive}}
+
+<h3>What must be proved at the end (Step 1.6)</h3>
+<p>One comparison: <b>proactive</b> scaling (uses the prediction) vs <b>reactive</b> scaling (uses the
+current reading), measured on <b>spike response time</b>, <b>wasted capacity</b> and <b>false alarms</b>.</p>
+
+<h3>Two phases</h3>
+<ul>
+  <li><b>Phase 1</b> (now): full classical system &mdash; data &rarr; LSTM &rarr; scaling &rarr; dashboard.</li>
+  <li><b>Phase 2</b> (next semester): a 4-qubit quantum circuit is inserted between the LSTM and the
+      final output layer, and compared against Phase 1. So Phase 1 must stay clean.</li>
+</ul>
+
+<h3>Where we are</h3>
+<table>
+  <thead><tr><th>Step</th><th>What</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>1.1</td><td>Environment and folders</td><td><span class="pill part">Mostly done</span> README + git missing</td></tr>
+    <tr><td>1.2</td><td>Data: choose a VM, clean it</td><td><span class="pill part">Mostly done</span> synthetic generator missing</td></tr>
+    <tr><td>1.3</td><td>Prepare data for the model</td><td><span class="pill done">Done</span> all checks pass</td></tr>
+    <tr><td>1.4</td><td>Build and train the LSTM</td><td><span class="pill todo">Next</span></td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================ PAGE 2 ============================ -->
+<section class="flow">
+<h2><span class="num">2</span>The data, and choosing one VM</h2>
+
+<h3>The dataset</h3>
+<ul>
+  <li><b>GWA-T-12 Bitbrains</b>, <span class="mono">fastStorage</span> trace, published by TU Delft.
+      Real servers of banks and insurance companies.</li>
+  <li><b>1,250 VMs</b>, one CSV each, semicolon-separated, one reading every <b>5 minutes</b>, covering one month (12 Aug &ndash; 11 Sep 2013).</li>
+</ul>
+
+<h3>From 11 raw columns to 4</h3>
+<table>
+  <thead><tr><th style="width:26mm">Our column</th><th>Made from</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><b>datetime</b></td><td>Timestamp</td><td>Header says milliseconds but the values are <b>seconds</b>; the code detects this.</td></tr>
+    <tr><td><b>cpu</b></td><td>CPU usage [%]</td><td>Already a percentage. Clipped to 0&ndash;100.</td></tr>
+    <tr><td><b>mem</b></td><td>used &divide; given &times; 100</td><td>Raw memory is millions of KB; without converting, the model would treat memory as more important just because the numbers are bigger.</td></tr>
+    <tr><td><b>net</b></td><td>received + transmitted</td><td>Total activity is the signal; direction does not matter here.</td></tr>
+  </tbody>
+</table>
+<p class="small">Disk columns and the fixed allocation figures (core count, MHz capacity) are dropped &mdash;
+this project forecasts and scales only CPU, memory and network.</p>
+
+<p><b>Why all three together:</b> when a job starts, CPU, memory and network rise together. A model
+that sees all three has more clues than one that sees CPU alone.</p>
+
+<h3>Choosing a VM: five rules</h3>
+<ol class="steps">
+  <li><b>At least 2,000 readings</b> (~7 days) &rarr; 1,250 files become <b>1,177</b>.</li>
+  <li><b>Mean CPU 20&ndash;60%.</b> Below that the VM is idle, above it is always full; both teach the model one constant answer. &rarr; <b>158</b> pass. (889 VMs, 76%, are below 5%.)</li>
+  <li><b>Highest standard deviation first</b> &mdash; std measures how much the CPU actually moves, which is what there is to learn.</li>
+  <li><b>All three parts must move</b> (train / validation / test).</li>
+  <li><b>Memory and network must not be dead.</b> The model predicts all three metrics, so a metric stuck on one value would be a column with nothing to learn. A metric is rejected if it never changes, or if one value covers more than 90% of its readings. &rarr; caught <b>12</b> VMs with dead memory and <b>225</b> with dead network across the dataset.</li>
+</ol>
+<p class="small">&rarr; <b>138</b> real candidates remain, and <b>VM 270</b> is top of that list.</p>
+
+{{SVG:funnel}}
+
+<div class="box ok">
+  <span class="lab">Two faults found and fixed in the survey</span>
+  <ul style="margin-bottom:0">
+    <li><b>Switched-off days were counted.</b> An off VM still writes a row with every number at 0.
+        The first pick, VM 214, looked like 44.21% mean only because of that; while running it was
+        <b>68.43%</b> &mdash; outside the band. Fix: skip rows where the memory given to the VM is 0.</li>
+    <li><b>The test period was never checked.</b> The next pick, VM 200, had the highest std of all but
+        its last 4.5 days are flat zero &mdash; exactly the slice kept for testing. Fix: rule 4 above.</li>
+  </ul>
+</div>
+
+<h3>The chosen VM: 270</h3>
+<table>
+  <thead><tr><th>Property</th><th class="num">Value</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Mean CPU / std</td><td class="num">46.81% / 48.36</td><td>Inside the band, top of the ranking</td></tr>
+    <tr><td>Switched-off rows</td><td class="num">0</td><td>Ran the whole month</td></tr>
+    <tr><td>Daily rhythm</td><td class="num">29% &rarr; 62%</td><td>Quiet at 11:00, busiest at 20:00</td></tr>
+    <tr><td>Shape of readings</td><td class="num">47% / 36%</td><td>At 0&ndash;2% / above 98% &mdash; a batch machine, mostly on or off</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================ PAGE 3 ============================ -->
+<section class="flow">
+<h2><span class="num">3</span>Cleaning the data</h2>
+<p class="small">File: <span class="mono">utils/load_data.py</span> &mdash; one raw file in, a clean 4-column table out.</p>
+
+<h3>The six steps</h3>
+<ol class="steps">
+  <li><b>Read with <span class="mono">;</span> as separator</b> &mdash; these files are not comma-separated.</li>
+  <li><b>Clean the column names</b> &mdash; the raw headers carry stray spaces.</li>
+  <li><b>Parse the timestamp</b> and make it the index &mdash; detects seconds vs milliseconds by size.</li>
+  <li><b>Build cpu, mem, net</b> and clip the percentages to 0&ndash;100.</li>
+  <li><b>Resample onto an exact 5-minute grid</b> &mdash; raw spacing drifts, and the model needs every step to mean the same amount of time.</li>
+  <li><b>Handle gaps:</b> fill up to 3 missing steps (15 min) with the last value; anything longer is <b>deleted, never guessed</b>, because inventing hours of load would teach the model something false.</li>
+</ol>
+
+{{SVG:loader}}
+
+<h3>Result on VM 270</h3>
+<table>
+  <thead><tr><th>Result</th><th class="num">Value</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Clean readings</td><td class="num">8,640</td><td>Exactly 30.0 days</td></tr>
+    <tr><td>Short gaps filled</td><td class="num">21</td><td>Holes of 15 minutes or less</td></tr>
+    <tr><td>Rows deleted</td><td class="num">0</td><td>Nothing had to be thrown away</td></tr>
+    <tr><td>Time jumps</td><td class="num">0</td><td>Every row exactly 5 minutes after the one before</td></tr>
+  </tbody>
+</table>
+
+{{IMG:plots/270_week.png}}
+<figcaption><b>One week of the clean data:</b> CPU (blue), memory (orange), network (green).</figcaption>
+</section>
+
+<!-- ============================ PAGE 4 ============================ -->
+<section class="flow">
+<h2><span class="num">4</span>Do the three metrics really move together?</h2>
+<p class="small">This is the assumption behind feeding CPU, memory and network to one model, so it is worth proving rather than stating.</p>
+
+<h3>What "correlation" means</h3>
+<ul>
+  <li>A single number between <b>&minus;1 and +1</b> that says how closely two things move together.</li>
+  <li><b>+1</b> = they always rise and fall together. <b>0</b> = no relationship. <b>&minus;1</b> = one rises when the other falls.</li>
+  <li>Rough reading: below 0.3 weak, 0.3&ndash;0.7 moderate, above 0.7 strong.</li>
+</ul>
+
+<h3>How the number is calculated</h3>
+<p>
+For every reading, check how far CPU is from its own average, and how far memory is from its own
+average. Multiply the two. If both are above average, or both below, the answer is <b>positive</b>.
+If one is above while the other is below, it is <b>negative</b>. Average all those products, then
+divide by the two standard deviations so the result always lands between &minus;1 and +1.
+</p>
+<p>VM 270's averages are <b>CPU 45.64%</b> and <b>memory 11.76%</b>. Taking one reading every 5 days, with no picking and choosing:</p>
+
+<table>
+  <thead><tr><th>Date</th><th class="num">CPU</th><th class="num">Memory</th><th class="num">CPU &minus; 45.64</th><th class="num">Mem &minus; 11.76</th><th class="num">Product</th><th>Same side?</th></tr></thead>
+  <tbody>
+    <tr><td>12 Aug</td><td class="num">0.4</td><td class="num">0.3</td><td class="num">&minus;45.3</td><td class="num">&minus;11.5</td><td class="num">+521</td><td>yes &mdash; both low</td></tr>
+    <tr><td>17 Aug</td><td class="num">100.0</td><td class="num">14.4</td><td class="num">+54.4</td><td class="num">+2.6</td><td class="num">+141</td><td>yes &mdash; both high</td></tr>
+    <tr><td>22 Aug</td><td class="num">100.0</td><td class="num">36.3</td><td class="num">+54.4</td><td class="num">+24.6</td><td class="num">+1338</td><td>yes &mdash; both high</td></tr>
+    <tr><td>27 Aug</td><td class="num">0.3</td><td class="num">0.8</td><td class="num">&minus;45.3</td><td class="num">&minus;11.0</td><td class="num">+498</td><td>yes &mdash; both low</td></tr>
+    <tr><td>1 Sep</td><td class="num">0.3</td><td class="num">0.0</td><td class="num">&minus;45.3</td><td class="num">&minus;11.8</td><td class="num">+535</td><td>yes &mdash; both low</td></tr>
+    <tr><td>6 Sep</td><td class="num">9.0</td><td class="num">22.2</td><td class="num">&minus;36.6</td><td class="num">+10.4</td><td class="num">&minus;381</td><td>no &mdash; opposite</td></tr>
+  </tbody>
+</table>
+<p class="small">Mostly positive products &rarr; a positive correlation. Doing this for all 8,640 readings gives <b>r = 0.7082</b>, which rounds to <b>0.71</b>. Computed two ways &mdash; by the formula above and by pandas <span class="mono">.corr()</span> &mdash; both give 0.7082.</p>
+
+<h3>The three results</h3>
+<table>
+  <thead><tr><th>Pair</th><th class="num">r</th><th class="num">Readings on the same side of their average</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><b>CPU &amp; memory</b></td><td class="num">0.71</td><td class="num">90.2%</td><td>Strong &mdash; they really do move together</td></tr>
+    <tr><td>Memory &amp; network</td><td class="num">0.21</td><td class="num">&mdash;</td><td>Weak</td></tr>
+    <tr><td><b>CPU &amp; network</b></td><td class="num">0.11</td><td class="num">58.3%</td><td>Almost none &mdash; 50% would be pure chance</td></tr>
+  </tbody>
+</table>
+
+<p>A second, simpler check &mdash; split every reading by how busy the CPU was:</p>
+<table>
+  <thead><tr><th>VM 270 state</th><th class="num">Readings</th><th class="num">Average memory</th><th class="num">Average network</th></tr></thead>
+  <tbody>
+    <tr><td>CPU idle (below 2%)</td><td class="num">4,087</td><td class="num">0.7%</td><td class="num">5.8 KB/s</td></tr>
+    <tr><td>CPU busy (above 98%)</td><td class="num">3,065</td><td class="num">23.3%</td><td class="num">197.7 KB/s</td></tr>
+  </tbody>
+</table>
+<p class="small">Memory is <b>33&times;</b> higher when the CPU is busy. Network is 34&times; higher on average too &mdash; but only in bursts, which is why its correlation stays low.</p>
+
+{{IMG:plots/fig_correlation.png}}
+<figcaption><b>The same thing as a picture.</b> Each dot is one 5-minute reading; the black line is the
+average of each 10%-wide CPU slice. <b>Left:</b> memory climbs steadily as CPU climbs &mdash; a real
+relationship. <b>Right:</b> the network line jumps up and down with no direction, which is what
+r = 0.11 looks like.</figcaption>
+
+<div class="box">
+  <span class="lab">The conclusion to state out loud</span>
+  <p>
+    <b>Memory genuinely follows CPU (r = 0.71), so feeding both to one model is justified.</b>
+    <b>Network does not follow CPU on this VM (r = 0.11).</b> It still belongs in the model, because
+    the scaling engine must predict network load too, but we should expect it to be the hardest of
+    the three to forecast &mdash; and we should say so before Step 1.5 rather than be surprised by it.
+  </p>
+</div>
+</section>
+
+<section class="flow">
+<h2><span class="num">5</span>Preparing the data for the model</h2>
+<p class="small">File: <span class="mono">utils/preprocessing.py</span> &mdash; <b>the order of these steps is the whole point.</b></p>
+
+{{SVG:preprocess}}
+
+<h3>A &mdash; Split by time first (70 / 15 / 15)</h3>
+<ul>
+  <li>First 70% of the days trains, next 15% validates, last 15% tests. <b>Never random.</b></li>
+  <li>In real life we only know the past. Random splitting would let the model "predict" Monday after seeing Tuesday &mdash; the score would look great and mean nothing.</li>
+</ul>
+
+<h3>B &mdash; Scale to 0&ndash;1, fitted on training data only</h3>
+<ul>
+  <li><span class="mono">MinMaxScaler</span> learns the min and max from <b>training</b> only, then transforms all three parts.</li>
+  <li>If it also saw the test part, test information would leak into training and results would look better than they are.</li>
+  <li><b>Proof it worked:</b> training scales to exactly 0.00&ndash;1.00 but test reaches <b>1.91</b>. Going outside 0&ndash;1 is only possible if the scaler never saw the test data.</li>
+  <li>Saved to <span class="mono">models/scaler.joblib</span>, so the dashboard can turn predictions back into real CPU %, memory % and KB/s.</li>
+</ul>
+
+<h3>C &mdash; Sliding windows, built inside each part</h3>
+<ul>
+  <li>One example = <b>60 readings (5 hours)</b> of all three metrics; the answer = the <b>next reading (5 minutes later)</b>. Then the window slides one step.</li>
+  <li>60 steps is long enough to contain a whole job starting and finishing, short enough to train quickly.</li>
+  <li>5 minutes ahead comfortably covers the 60&ndash;90 second startup delay.</li>
+  <li>Windows are made separately per part, so no example mixes training and test data.</li>
+</ul>
+
+<h3>D &mdash; Batches of 64</h3>
+<table>
+  <thead><tr><th>Part</th><th class="num">Rows</th><th class="num">Windows</th><th class="num">Batches</th><th>Shuffled?</th></tr></thead>
+  <tbody>
+    <tr><td>Training (70%)</td><td class="num">6,048</td><td class="num">5,988</td><td class="num">94</td><td>Yes &mdash; window order only</td></tr>
+    <tr><td>Validation (15%)</td><td class="num">1,296</td><td class="num">1,236</td><td class="num">20</td><td>No</td></tr>
+    <tr><td>Test (15%)</td><td class="num">1,296</td><td class="num">1,236</td><td class="num">20</td><td>No</td></tr>
+  </tbody>
+</table>
+<p class="small">Shuffling reorders whole 5-hour windows, never the readings inside them. Each part loses
+60 windows because the first 60 rows can only be history.</p>
+
+<h3>E &mdash; Checks before any training</h3>
+<p>Windowing mistakes do not crash anything &mdash; they quietly produce data the model cannot learn from.
+So the pipeline checks itself:</p>
+<table>
+  <thead><tr><th>Check</th><th>Expected</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Input batch shape</td><td>(64, 60, 3)</td><td><span class="pill done">Pass</span></td></tr>
+    <tr><td>Answer batch shape</td><td>(64, 3)</td><td><span class="pill done">Pass</span></td></tr>
+    <tr><td>Un-scale window 0, compare with the CSV</td><td>difference &asymp; 0</td><td><span class="pill done">Pass</span> 0.00024 (rounding only)</td></tr>
+    <tr><td>Test data allowed outside 0&ndash;1</td><td>yes</td><td><span class="pill done">Pass</span> up to 1.91</td></tr>
+  </tbody>
+</table>
+
+<div class="box warn">
+  <span class="lab">Still to do before Step 1.4, and the limits to admit</span>
+  <p style="margin-bottom:1.5mm">
+    <b>To do:</b> <span class="mono">README.md</span> &middot; <span class="mono">git init</span> and a
+    first commit &middot; <span class="mono">utils/generate_data.py</span> (synthetic data with spikes at
+    known times, needed for the Step 1.6 comparison).
+  </p>
+  <p>
+    <b>Limits:</b> VM 270 is a batch machine (mostly 0% or 100%), which is harder to predict than a
+    smooth curve. The top candidates are near-copies of each other. Only one VM and one month of data
+    are used.
+  </p>
+</div>
+
+</section>
+
+</body>
+</html>
