@@ -525,3 +525,64 @@ DIAGRAMS = {
     "leakage": d_leakage,
     "windows": d_windows,
 }
+
+
+# ============================================================ D10
+def d_landscape():
+    """Where the reviewed papers sit, and the corner our project aims at."""
+    s = []
+    s.append(label(0, 20, "Where the reviewed papers sit &#8212; and the corner that is still empty",
+                   15, INK, "start", "600"))
+    s.append(label(0, 40, "Horizontal: what the paper actually measures. Vertical: the model family.",
+                   11, INK2, "start"))
+
+    x0, y0, w, h = 130, 60, 780, 330
+
+    # quadrant shading: the empty top-right
+    s.append(f'<rect x="{x0 + w/2}" y="{y0}" width="{w/2}" height="{h/2}" fill="{AQUA}" opacity="0.07"/>')
+    s.append(f'<rect x="{x0}" y="{y0}" width="{w}" height="{h}" fill="none" stroke="{RULE}" stroke-width="1.4"/>')
+    s.append(f'<line x1="{x0 + w/2}" y1="{y0}" x2="{x0 + w/2}" y2="{y0+h}" stroke="{RULE}" stroke-width="1.2" stroke-dasharray="4 4"/>')
+    s.append(f'<line x1="{x0}" y1="{y0 + h/2}" x2="{x0+w}" y2="{y0 + h/2}" stroke="{RULE}" stroke-width="1.2" stroke-dasharray="4 4"/>')
+
+    # axis labels
+    s.append(label(x0 + w/2, y0 + h + 26, "forecast error only  (RMSE / MAE / MAPE)  &#8594;  end-to-end outcomes  (SLA, energy, scaling actions)",
+                   11, INK2, "middle"))
+    s.append(f'<text x="24" y="{y0 + h/2}" font-size="11" fill="{INK2}" text-anchor="middle" '
+             f'transform="rotate(-90 24 {y0 + h/2})">classical models  &#8594;  quantum models</text>')
+    s.append(label(x0 + w - 12, y0 + 20, "QUANTUM + DECISION-LEVEL", 10.5, "#0d6b48", "end", "700"))
+    s.append(label(x0 + w - 12, y0 + 34, "no paper found here", 10, MUTED, "end"))
+
+    # (x fraction, y fraction, label, colour, is_ours)
+    papers = [
+        (0.16, 0.16, "MCT-AQNN (TPAMI 24)", MUTED, False),
+        (0.24, 0.26, "CA-QNN (TNNLS 25)", MUTED, False),
+        (0.13, 0.66, "TFEGRU (TSC 24)", MUTED, False),
+        (0.20, 0.78, "MSCNet (TSC 25)", MUTED, False),
+        (0.30, 0.90, "EvoGWP (TPDS 24)", MUTED, False),
+        (0.10, 0.88, "CAGMoE (TCC 26)", MUTED, False),
+        (0.38, 0.70, "VSBG (IoT-J 24)", MUTED, False),
+        (0.33, 0.58, "E-LCWF (TCC 24)", MUTED, False),
+        (0.30, 0.82, "Kollu (ETT 24)", MUTED, False),
+        (0.62, 0.74, "TempoSight (IoT-J 25)", MUTED, False),
+        (0.80, 0.86, "ECSLN (TSUSC 26)", MUTED, False),
+        (0.86, 0.64, "CATScaler (TSC 25)", MUTED, False),
+        (0.78, 0.52, "OUR Phase 1", BLUE, True),
+        (0.84, 0.20, "OUR Phase 2 (planned)", AQUA, True),
+    ]
+    for fx, fy, name, col, ours in papers:
+        cx, cy = x0 + fx * w, y0 + fy * h
+        r = 7 if ours else 4.5
+        s.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{col}" '
+                 f'{"stroke=\"#fff\" stroke-width=\"2\"" if ours else ""} opacity="{1 if ours else 0.75}"/>')
+        anchor = "end" if fx > 0.62 else "start"
+        dx = -10 if anchor == "end" else 10
+        s.append(label(cx + dx, cy + 4, name, 10 if not ours else 11,
+                       col if not ours else col, anchor, "400" if not ours else "700"))
+
+    s.append(label(0, y0 + h + 52,
+                   "Every reviewed paper reports forecast error. Only three connect the forecast to a decision outcome, and none of those is quantum.",
+                   11, INK2, "start"))
+    return wrap("0 0 1000 450", "".join(s))
+
+
+DIAGRAMS["landscape"] = d_landscape

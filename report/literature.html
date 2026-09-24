@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Literature Review and Comparison - Cloud Workload Prediction</title>
+<style>
+{{CSS}}
+body{ font-size:9.9pt; line-height:1.42; }
+h2{ font-size:16pt; }
+h3{ font-size:12pt; margin:5mm 0 1.8mm 0; }
+table{ font-size:9.2pt; }
+tbody td{ padding:1.3mm 2mm; }
+.paper{ border:1px solid var(--rule); border-radius:6px; margin:3mm 0; break-inside:avoid; }
+.paper > .hd{ background:var(--panel); padding:2mm 3.5mm; border-bottom:1px solid var(--rule); }
+.paper > .hd .t{ font-weight:700; font-size:11.4pt; display:block; }
+.paper > .hd .m{ font-size:9pt; color:var(--ink2); }
+.paper > .bd{ padding:2.4mm 3.5mm; }
+.paper .row{ display:grid; grid-template-columns:26mm 1fr; gap:1mm 3mm; margin-bottom:0.9mm; }
+.paper .row .k{ font-size:8.3pt; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--muted); padding-top:0.5mm; }
+.paper .row .k.us{ color:var(--blue); }
+.paper .row .k.bad{ color:#b23b3a; }
+.tag{ font-size:7.8pt; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; padding:0.5mm 2mm; border-radius:9px; background:#e8e7e0; color:#55544d; }
+.tag.q{ background:#e7effb; color:#1d5aa8; }
+.tag.d{ background:#fdf0ea; color:#9c3d13; }
+</style>
+</head>
+<body>
+
+<!-- ============================ COVER ============================ -->
+<section class="cover">
+  <div class="cover-rule"></div>
+  <div class="kicker">Mini Project &middot; Phase 1 &middot; Literature Review</div>
+  <h1>What the Field Has<br>Already Published</h1>
+  <div class="sub">
+    Thirteen recent papers on cloud workload prediction &mdash; what each one does, what it
+    fixed, what went wrong with the data, and exactly how our project differs from every
+    one of them.
+  </div>
+  <div class="cover-meta">
+    <div><span class="k">Covers</span><span class="v">Papers published 2024, 2025 and 2026</span></div>
+    <div><span class="k">Searched</span><span class="v">OpenAlex, Crossref, web search<br>24 September 2026</span></div>
+    <div><span class="k">Our project</span><span class="v">LSTM forecast &rarr; proactive auto-scaling<br>Bitbrains fastStorage, VM 270</span></div>
+    <div><span class="k">Verdict</span><span class="v">Our topic is crowded.<br>Our exact combination is not.</span></div>
+  </div>
+  <div class="cover-foot">
+    <b>Read this first.</b> Every fact in this review comes from a paper's published title,
+    venue, year and abstract, which were retrieved from open bibliographic databases.
+    Where a full text sits behind a paywall, that is stated and nothing is invented in its
+    place. Journal quartiles could <b>not</b> be verified automatically and must be confirmed
+    by you &mdash; see Section&nbsp;2.
+  </div>
+</section>
+
+<!-- ============================ 1 HOW ============================ -->
+<section class="page-break">
+<h2><span class="num">1</span>How these papers were found</h2>
+
+<p class="lead">
+Your teacher asked for Q1 papers from 2024&ndash;2026 on datasets like ours. This section
+records exactly how the search was done, so the method can be repeated or challenged.
+</p>
+
+<h3>The search</h3>
+<table>
+  <thead><tr><th style="width:34mm">Step</th><th>What was done</th></tr></thead>
+  <tbody>
+    <tr><td><b>Databases</b></td><td><b>OpenAlex</b> (open bibliographic index) for discovery, <b>Crossref</b> for publisher metadata, plus general web search for context. Publisher sites (Springer, Wiley, ACM, IEEE) block automated access, so full texts were not retrieved.</td></tr>
+    <tr><td><b>Date filter</b></td><td>Published on or after 1 January 2024. Searches run 24 September 2026.</td></tr>
+    <tr><td><b>Search fields</b></td><td>Title and abstract, for: <i>"cloud workload prediction"</i>, <i>"workload prediction" AND cloud</i>, <i>Bitbrains</i>, <i>"workload forecasting" AND cloud</i>, <i>"auto-scaling" AND prediction</i>, <i>"resource prediction" AND "data center"</i>, <i>quantum AND "workload prediction"</i>, <i>"CPU utilization prediction"</i>.</td></tr>
+    <tr><td><b>Raw results</b></td><td><b>213</b> unique journal articles.</td></tr>
+    <tr><td><b>Screening</b></td><td>Kept papers whose title or abstract covered workload / CPU / resource / scaling <b>and</b> cloud or data centre; then ranked by journal standing, by whether a real public trace (Bitbrains, Google, Alibaba, Azure, Materna) was named, and by citation count.</td></tr>
+    <tr><td><b>Final set</b></td><td><b>13</b> papers, reviewed in Section&nbsp;3.</td></tr>
+  </tbody>
+</table>
+
+<div class="box warn">
+  <span class="lab">What this review cannot claim</span>
+  <ul style="margin-bottom:0">
+    <li><b>Abstract-level evidence only.</b> Each summary is built from the published abstract. Where a
+        number appears (for example "32&ndash;96% higher accuracy"), it is the authors' own claim, quoted
+        as such &mdash; not something reproduced or checked.</li>
+    <li><b>Quartiles are unverified.</b> Scimago blocks automated access (HTTP 403), so no quartile in
+        this document was read from Scimago. Section&nbsp;2 gives objective metrics instead, and you
+        should confirm each journal at <span class="mono">scimagojr.com</span> before submitting.</li>
+    <li><b>Not exhaustive.</b> 213 results from one index with eight queries is a solid sample of the
+        field, not the whole of it.</li>
+  </ul>
+</div>
+</section>
+
+<!-- ============================ 2 JOURNALS ============================ -->
+<section class="page-break">
+<h2><span class="num">2</span>The journals, and the Q1 question</h2>
+
+<p>
+Quartile (Q1&ndash;Q4) is assigned per subject category by Scopus/SJR and by JCR, and the two
+disagree often. Since Scimago could not be queried, the table below gives metrics that
+<b>were</b> retrieved, from OpenAlex, on 24 September 2026. <b>2-yr citedness</b> is the average
+number of citations a paper in that journal received in its first two years &mdash; a reasonable
+proxy for standing.
+</p>
+
+<table>
+  <thead><tr><th>Journal</th><th>Publisher</th><th class="num">2-yr citedness</th><th class="num">h-index</th><th>Reputation</th></tr></thead>
+  <tbody>
+    <tr><td>IEEE Trans. Pattern Analysis &amp; Machine Intelligence</td><td>IEEE</td><td class="num">14.60</td><td class="num">555</td><td>Top-tier in AI</td></tr>
+    <tr><td>IEEE Trans. Neural Networks &amp; Learning Systems</td><td>IEEE</td><td class="num">9.29</td><td class="num">244</td><td>Top-tier in AI</td></tr>
+    <tr><td>IEEE Trans. Services Computing</td><td>IEEE</td><td class="num">7.10</td><td class="num">119</td><td>Leading in services/cloud</td></tr>
+    <tr><td>IEEE Internet of Things Journal</td><td>IEEE</td><td class="num">6.35</td><td class="num">257</td><td>Leading in IoT</td></tr>
+    <tr><td>IEEE Trans. Sustainable Computing</td><td>IEEE</td><td class="num">6.32</td><td class="num">54</td><td>Specialist, green computing</td></tr>
+    <tr><td>Future Generation Computer Systems</td><td>Elsevier</td><td class="num">6.00</td><td class="num">215</td><td>Long-standing in distributed systems</td></tr>
+    <tr><td>Cluster Computing</td><td>Springer</td><td class="num">5.69</td><td class="num">109</td><td>Established in cluster/cloud</td></tr>
+    <tr><td>IEEE Trans. Parallel &amp; Distributed Systems</td><td>IEEE</td><td class="num">4.67</td><td class="num">202</td><td>Flagship in parallel/distributed</td></tr>
+    <tr><td>IEEE Trans. Cloud Computing</td><td>IEEE</td><td class="num">4.11</td><td class="num">97</td><td>Specialist, cloud</td></tr>
+    <tr><td>Trans. Emerging Telecommunications Technologies</td><td>Wiley</td><td class="num">2.48</td><td class="num">77</td><td><b>Noticeably lower</b> &mdash; likely not Q1</td></tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <span class="lab">How to say this to your teacher</span>
+  <p>
+    "Twelve of the thirteen papers are from IEEE Transactions, Elsevier or Springer journals that are
+    normally ranked Q1 in their categories; I have listed citedness and h-index as evidence and will
+    confirm each quartile on Scimago. One paper (Kollu et al., 2024) is from a weaker journal and is
+    included deliberately, because it is the closest published match to our exact dataset."
+  </p>
+</div>
+</section>
+
+<!-- ============================ 3 PAPERS ============================ -->
+<section class="page-break">
+<h2><span class="num">3</span>The thirteen papers</h2>
+<p class="lead">
+Grouped by what they are for. Each entry keeps the same shape, so you can compare them
+quickly: what it is, the problem it attacks, the data, the method, the claimed result, the
+data problems it reports, and what it means for us.
+</p>
+
+<h3>Group A &mdash; Quantum models for workload prediction <span class="tag q">closest to our Phase 2</span></h3>
+
+<div class="paper"><div class="hd">
+  <span class="t">1. MCT-AQNN: A Multiple Controlled Toffoli Driven Adaptive Quantum Neural Network Model for Dynamic Workload Prediction in Cloud Environments</span>
+  <span class="m">Gupta, Saxena, Singh &amp; Lee &middot; <b>IEEE Trans. Pattern Analysis and Machine Intelligence</b>, 2024 &middot; 29 citations &middot; doi:10.1109/tpami.2024.3402061</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>A quantum neural network for predicting cloud workloads. Input values and network weights are re-expressed as <b>qubits</b>, and Multiple Controlled Toffoli gates act at the hidden and output layers. A companion training algorithm (UAQL) trains the network.</div></div>
+  <div class="row"><div class="k">Problem</div><div>Existing models "fall short of capturing the high-variance nature of volatile and dynamic cloud workloads" &mdash; i.e. ordinary networks under-react to sudden spikes.</div></div>
+  <div class="row"><div class="k">Data</div><div>Four real-world benchmark datasets (named in the full text, not the abstract).</div></div>
+  <div class="row"><div class="k">Claim</div><div>Up to <b>32&ndash;96% higher accuracy</b> than existing approaches. Authors' own claim.</div></div>
+  <div class="row"><div class="k us">For us</div><div><b>This is the single most important paper for Phase 2.</b> Quantum learning applied to cloud workload prediction is already published, in one of the strongest venues in the field. Our Phase 2 cannot be presented as "the first" anything. What is still open is <i>how</i> the quantum part is used: this paper replaces the whole network, whereas our plan inserts a small 4-qubit circuit into a classical LSTM and keeps the classical pipeline identical for a controlled comparison.</div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">2. CA-QNN: A Comprehensively Adaptive Architectural Optimization-Ingrained Quantum Neural Network Model for Cloud Workloads Prediction</span>
+  <span class="m">Kumar, Saxena, Gupta, Kumar &amp; Singh &middot; <b>IEEE Trans. Neural Networks and Learning Systems</b>, 2025 &middot; doi:10.1109/tnnls.2025.3577721</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>A quantum neural network that learns <b>its own structure as well as its weights</b>. Workload data becomes qubits, processed by qubit neurons with controlled-NOT activation; the architecture grows and recombines during training (quantum adaptive modulation, size-adaptive recombination).</div></div>
+  <div class="row"><div class="k">Problem</div><div>Stated directly: ordinary models are limited because training "relies only on parametric (interconnection weights) adjustments" &mdash; the shape of the network is fixed by hand, so it cannot adapt to sudden demand changes.</div></div>
+  <div class="row"><div class="k">Data</div><div>Four benchmark datasets of heterogeneous cloud workloads; compared against seven state-of-the-art methods.</div></div>
+  <div class="row"><div class="k">Claim</div><div>Prediction error reduced by up to <b>93.40%</b> vs deep learning and <b>91.27%</b> vs other QNN approaches. Authors' own claim.</div></div>
+  <div class="row"><div class="k us">For us</div><div>Same warning as above, one year more recent and from the same research group. Note what they measure: <b>prediction error only</b>. Neither quantum paper reports what the better forecast does to scaling decisions, cost or SLA violations. That gap is where our project can stand.</div></div>
+</div></div>
+
+<h3>Group B &mdash; Deep learning forecasters <span class="tag">the mainstream</span></h3>
+
+<div class="paper"><div class="hd">
+  <span class="t">3. VSBG: An Improved LSTM-Based Prediction Approach for Resources and Workload in Large-Scale Data Centers</span>
+  <span class="m">Yuan, Bi, Li, Zhang &amp; Zhou &middot; <b>IEEE Internet of Things Journal</b>, 2024 &middot; 52 citations &middot; doi:10.1109/jiot.2024.3383512</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>A four-stage pipeline: Variational Mode Decomposition splits the series into modes, a Savitzky&ndash;Golay filter smooths the first mode to remove noise, then two BiLSTM layers with a Grid-LSTM layer between them make the prediction.</div></div>
+  <div class="row"><div class="k">Problem</div><div>Current methods "fail to handle implicit noise data and capture nonlinear, long and short-term, and spatial characteristics".</div></div>
+  <div class="row"><div class="k bad">Data problem</div><div><b>Noise is treated as a first-class obstacle</b> &mdash; half the architecture exists to remove it before the LSTM ever sees the data.</div></div>
+  <div class="row"><div class="k us">For us</div><div>The most-cited paper in this set, and the closest to our model family. It says plainly that a plain LSTM on raw traces is not competitive: decomposition and smoothing come first. Our pipeline does neither. This is a concrete, cheap upgrade for Step 1.4 and an obvious question at a viva: <i>"why no decomposition?"</i></div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">4. TFEGRU: Time-Frequency Enhanced Gated Recurrent Unit With Attention for Cloud Workload Prediction</span>
+  <span class="m">Zhao, Lin, Lin, Zhong &amp; Li &middot; <b>IEEE Trans. Services Computing</b>, 2024 &middot; 21 citations &middot; doi:10.1109/tsc.2024.3517324</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>A block that extracts features in <b>both the time and frequency domains</b>, a channel-independent strategy plus channel embedding for high-dimensional workloads, then a GRU with multi-head self-attention.</div></div>
+  <div class="row"><div class="k">Problem</div><div>RNN-based approaches "struggle to capture the long-term dependencies inherent in workloads".</div></div>
+  <div class="row"><div class="k">Data</div><div>Real traces from <b>Google</b> and <b>Alibaba</b> data centres.</div></div>
+  <div class="row"><div class="k us">For us</div><div>Introduces the "channel independent" idea: with many metrics, treating each channel separately can beat mixing them. Our design assumes the opposite &mdash; that feeding cpu, mem and net together helps. We measured the correlations that justify it (CPU&ndash;memory r&nbsp;=&nbsp;0.71) but CPU&ndash;network is only 0.11, so the assumption is only half true for our VM.</div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">5. MSCNet: Multi-Scale Network With Convolutions for Long-Term Cloud Workload Prediction</span>
+  <span class="m">Zhao, Lin, Lin, Tang &amp; Li &middot; <b>IEEE Trans. Services Computing</b>, 2025 &middot; 24 citations &middot; doi:10.1109/tsc.2025.3536313</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>Multi-scale patches + Transformer encoder + multi-scale convolutions, so that short-term and long-term patterns are learned together.</div></div>
+  <div class="row"><div class="k bad">Data problem</div><div>States the trap directly: <b>"cloud workloads that appear stable in the short term often exhibit distinct patterns in the long term"</b>, which makes accuracy collapse when a short-horizon model is used for long horizons.</div></div>
+  <div class="row"><div class="k">Data</div><div>Alibaba, Google and Azure.</div></div>
+  <div class="row"><div class="k us">For us</div><div>Our horizon is a single step (5 minutes), which is the easy end of this problem &mdash; worth saying out loud rather than hiding. It also means our results cannot be compared against long-horizon papers.</div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">6. EvoGWP: Predicting Long-Term Changes in Cloud Workloads Using Deep Graph-Evolution Learning</span>
+  <span class="m">Li, Yao, Xiao, Yang &amp; Wu &middot; <b>IEEE Trans. Parallel and Distributed Systems</b>, 2024 &middot; 29 citations &middot; doi:10.1109/tpds.2024.3357715</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>Extracts "shapelets" &mdash; recurring shapes in a workload &mdash; and builds an <b>evolution graph</b> so that patterns of different workloads can interfere with one another, then predicts with a spatio-temporal GNN encoder-decoder.</div></div>
+  <div class="row"><div class="k bad">Data problem</div><div>Names a failure our own pipeline would suffer: a workload's "resource usage pattern", stable in the short term, <b>changes over the long term</b> because of shifting user demand or workload relocation, and this "may cause significant accuracy degradation".</div></div>
+  <div class="row"><div class="k">Data</div><div>Alibaba, Tencent and Google traces.</div></div>
+  <div class="row"><div class="k us">For us</div><div>Introduces the idea that VMs are <b>not independent</b> &mdash; they interfere. We train on one VM in isolation, which is simpler and also weaker. It is the natural next step if we ever go multi-VM.</div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">7. CAGMoE: Causality-Aware Graph Mixture of Experts for Accurate Multi-Cloud Workload Prediction</span>
+  <span class="m">Luo, Yu, Zheng, Yang, Sun &amp; Wu &middot; <b>IEEE Trans. Cloud Computing</b>, 2026 &middot; doi:10.1109/tcc.2026.3689897</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>Builds two graphs per window: one of <b>directed causal influence between metrics</b> (via a transfer-entropy proxy for Granger causality), one of local temporal continuity; a sparse Mixture-of-Experts then predicts.</div></div>
+  <div class="row"><div class="k">Problem</div><div>Earlier models "learn correlation-driven, largely symmetric dependencies that blur directed causal influence" &mdash; correlation does not say which metric moves first.</div></div>
+  <div class="row"><div class="k us">For us</div><div><b>Directly relevant to a question we already half-answered.</b> We measured correlation between our three metrics but correlation is symmetric: it cannot tell us whether CPU leads memory or the reverse. Our project brief assumes memory lags CPU. Measuring that lag would be a small, honest addition, and this paper is the reference for why it matters.</div></div>
+</div></div>
+
+<h3>Group C &mdash; Papers that use our exact dataset <span class="tag d">closest data match</span></h3>
+
+<div class="paper"><div class="hd">
+  <span class="t">8. TempoSight: Optimized Resource Forecasting for Carbon-Intelligent Data Centers &mdash; A Hybrid Deep Learning Approach</span>
+  <span class="m">Sallam &amp; Kaur &middot; <b>IEEE Internet of Things Journal</b>, 2025 &middot; doi:10.1109/jiot.2025.3610895</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>Combines a <b>Patch Time Series Transformer</b> (long-range context) with an <b>LSTM</b> (sequential dynamics), and tunes hyper-parameters with a Cuckoo Search Algorithm, for multivariate forecasting aimed at carbon-aware provisioning.</div></div>
+  <div class="row"><div class="k">Data</div><div><b>Alibaba and Bitbrains</b> &mdash; the same family of trace we use.</div></div>
+  <div class="row"><div class="k">Claim</div><div>10&ndash;15% lower RMSE and MAPE than state-of-the-art deep models <b>under high-load conditions</b>.</div></div>
+  <div class="row"><div class="k us">For us</div><div>The most direct competitor: Bitbrains, multivariate, LSTM-based, 2025, Q1-level venue. Two lessons. First, a plain LSTM is a component, not the whole model. Second, they justify the work by <b>carbon and cost</b>, not by RMSE alone &mdash; a framing our project can adopt cheaply, because energy saved is a function of over-provisioning, which we already plan to measure.</div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">9. Comparative analysis of cloud resources forecasting using deep learning techniques based on VM workload traces</span>
+  <span class="m">Kollu et al. &middot; <i>Trans. Emerging Telecommunications Technologies</i>, 2024 &middot; 8 citations &middot; doi:10.1002/ett.4933 &middot; <span class="tag d">weaker journal</span></span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>A straight comparison of MLP, autoregressive NN, CNN and LSTM for forecasting CPU and memory of many VMs, to free over-allocated resources and cut power use.</div></div>
+  <div class="row"><div class="k">Data</div><div><b>GWA-T-12 Bitbrains, all 1,250 VMs</b> &mdash; our dataset exactly.</div></div>
+  <div class="row"><div class="k">Claim</div><div>Up to 98% accuracy; <b>MLP came out best</b>, ahead of LSTM.</div></div>
+  <div class="row"><div class="k us">For us</div><div><b>The most useful paper in this review, and the most uncomfortable.</b> On our own dataset, a plain MLP beat an LSTM. It is also methodologically weak in a way we can learn from: "accuracy" is not a standard metric for a regression problem, and no naive baseline is reported. Our Step 1.5 plan &mdash; RMSE/MAE/MAPE plus a naive "next = current" baseline &mdash; is already more rigorous. Say that.</div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">10. ECSLN: Energy-Aware VM Consolidation Using Similarity-Driven Intelligence in Green Cloud Environments</span>
+  <span class="m">Biswas, Das, Banerjee &amp; Biswas &middot; <b>IEEE Trans. Sustainable Computing</b>, 2026 &middot; doi:10.1109/tsusc.2026.3660014</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>Predicts <b>over-utilised hosts</b> with a cosine-similarity learning network, then selects VMs to migrate and places them, to cut energy while respecting SLAs.</div></div>
+  <div class="row"><div class="k">Data</div><div>PlanetLab, <b>Bitbrains</b> and Alibaba Cluster 2020.</div></div>
+  <div class="row"><div class="k us">For us</div><div>Shows the other half of the story: prediction is judged by <b>energy consumed and SLA violations</b>, not by forecast error. Our three planned measures (response time, over-provisioning, false alarms) are in the same spirit, and over-provisioning converts directly into the energy argument this paper makes.</div></div>
+</div></div>
+
+<h3>Group D &mdash; From forecast to decision <span class="tag q">closest to our Step 1.6</span></h3>
+
+<div class="paper"><div class="hd">
+  <span class="t">11. CATScaler: A Convolution-Augmented Transformer Scaling Framework for Cloud-Native Applications</span>
+  <span class="m">Meng, Dai, Cong, Zhu &amp; Zhao &middot; <b>IEEE Trans. Services Computing</b>, 2025 &middot; doi:10.1109/tsc.2025.3592383</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>Two modules: a convolution-augmented Transformer that predicts workload, and an elastic auto-scaler that turns the prediction into a pod count. Reversible instance normalisation handles drift between training and live data.</div></div>
+  <div class="row"><div class="k">Problem</div><div>Stated in almost the same words as our own brief: Kubernetes' default autoscaler "scales pods only when the cluster or application exceeds a predefined threshold&hellip; this reactive approach often leads to significant resource waste because it cannot predict future workload changes and adjust resources in advance."</div></div>
+  <div class="row"><div class="k">Claim</div><div>Response-time latency reduced <b>1.1&times;</b> and service violation rate <b>3.2&times;</b> versus Kubernetes' default scaler, on a real 4-server cluster.</div></div>
+  <div class="row"><div class="k us">For us</div><div><b>This is our Step 1.6, already published in a Q1 venue.</b> The proactive-vs-reactive argument is not novel. Two differences remain honest ones: they run on a real cluster (we simulate), and they compare against Kubernetes' scaler rather than a reactive threshold of their own. Our contribution has to be elsewhere &mdash; see Section&nbsp;7.</div></div>
+</div></div>
+
+<div class="paper"><div class="hd">
+  <span class="t">12. E-LCWF: Enhancing Long-Term Cloud Workload Forecasting Framework &mdash; Anomaly Handling and Ensemble Learning in Multivariate Time Series</span>
+  <span class="m">Kim, Song, Koo, Son, Lee &amp; Baek &middot; <b>IEEE Trans. Cloud Computing</b>, 2024 &middot; 11 citations &middot; doi:10.1109/tcc.2024.3400859</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>Treats each resource as a multivariate series, <b>detects and handles anomalies first</b>, then ensembles transformer models with linear long-term forecasting models, weighted by error.</div></div>
+  <div class="row"><div class="k bad">Data problem</div><div>Anomaly handling is a <b>named pipeline stage</b>, not an afterthought. Untreated anomalies are presented as a direct cause of SLA violations and wasted resources.</div></div>
+  <div class="row"><div class="k us">For us</div><div>We do the opposite: our loader <b>clips</b> CPU above 100% and deletes long gaps, but never looks for anomalies inside the kept data. Worth admitting, and a cheap addition.</div></div>
+</div></div>
+
+<h3>Group E &mdash; Methodology</h3>
+
+<div class="paper"><div class="hd">
+  <span class="t">13. Benchmarking and revisiting time series forecasting methods in cloud workload prediction</span>
+  <span class="m">Lin, Lin, Zhao &amp; Chen &middot; <b>Cluster Computing</b>, 2024 &middot; 12 citations &middot; doi:10.1007/s10586-024-04827-3</span>
+</div><div class="bd">
+  <div class="row"><div class="k">About</div><div>A benchmark study comparing forecasting methods for cloud workloads. Its reference list spans Informer, Autoformer, FEDformer, Crossformer, PETformer, FITS, SparseTSF, TSMixer, ARIMA, LSTM and GRU &mdash; i.e. both heavy transformers and deliberately simple models.</div></div>
+  <div class="row"><div class="k bad">Caveat</div><div><b>Full text is paywalled.</b> Only title, venue, year, authors and reference list could be verified. Its conclusions are <b>not</b> reported here because they could not be read. Get it through your college library.</div></div>
+  <div class="row"><div class="k us">For us</div><div>Even the title carries the lesson: the field is "revisiting" its methods, because a wave of results has shown simple models are often competitive with elaborate ones. That is the context in which our plain LSTM will be judged &mdash; and precisely why our naive-baseline comparison in Step 1.5 matters.</div></div>
+</div></div>
+</section>
+
+<!-- ============================ 4 LANDSCAPE ============================ -->
+<section class="page-break">
+<h2><span class="num">4</span>The pattern across all thirteen</h2>
+
+{{SVG:landscape}}
+
+<h3>What everybody does</h3>
+<table>
+  <thead><tr><th style="width:44mm">Pattern</th><th>Evidence</th><th>Our position</th></tr></thead>
+  <tbody>
+    <tr><td><b>A plain LSTM is never the whole model</b></td><td>Every deep-learning paper here wraps the recurrent layer in something: decomposition (VSBG), frequency features (TFEGRU), multi-scale patches (MSCNet), a transformer (TempoSight), graphs (EvoGWP, CAGMoE), or an ensemble (E-LCWF).</td><td><b>We plan a bare LSTM.</b> Defensible as a Phase 1 baseline, but not as a contribution.</td></tr>
+    <tr><td><b>Alibaba and Google dominate</b></td><td>8 of 13 use them. Bitbrains appears in 3.</td><td>Bitbrains keeps us comparable with fewer papers, but it is a <b>per-VM</b> trace rather than aggregated cluster telemetry &mdash; a harder, spikier signal.</td></tr>
+    <tr><td><b>Error metrics dominate</b></td><td>10 of 13 report only RMSE / MAE / MAPE.</td><td>Our three decision metrics are less common &mdash; a genuine, if modest, strength.</td></tr>
+    <tr><td><b>Pre-processing is where the work is</b></td><td>Noise removal, anomaly handling, normalisation shift, decomposition &mdash; all named as core contributions.</td><td><b>This is our strongest area</b>, and the one we have documented most carefully.</td></tr>
+    <tr><td><b>Nobody explains VM selection</b></td><td>Not one abstract in this set says how the specific VMs or subsets were chosen.</td><td><b>The clearest gap we can fill.</b> See Section&nbsp;6.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================ 5 DATA PROBLEMS ============================ -->
+<section class="flow">
+<h2><span class="num">5</span>Problems with this kind of data</h2>
+<p class="lead">
+Part of your teacher's question was what goes wrong when using a dataset like this. The
+answer comes from two sources: what the papers report, and what we measured ourselves.
+</p>
+
+<h3>5.1 Reported in the literature</h3>
+<table>
+  <thead><tr><th style="width:42mm">Problem</th><th>Who reports it</th><th>Their fix</th></tr></thead>
+  <tbody>
+    <tr><td><b>Noise in raw traces</b></td><td>VSBG (IoT-J 2024)</td><td>Variational mode decomposition + Savitzky&ndash;Golay smoothing before the model</td></tr>
+    <tr><td><b>Anomalies / outliers</b></td><td>E-LCWF (TCC 2024)</td><td>Explicit anomaly detection and handling stage</td></tr>
+    <tr><td><b>Pattern drift over time</b></td><td>EvoGWP (TPDS 2024), MSCNet (TSC 2025)</td><td>Shapelet evolution graphs; multi-scale modelling</td></tr>
+    <tr><td><b>High variance / sudden spikes</b></td><td>MCT-AQNN (TPAMI 2024), CA-QNN (TNNLS 2025)</td><td>Quantum learning for sharper adaptation</td></tr>
+    <tr><td><b>High dimensionality</b></td><td>TFEGRU (TSC 2024)</td><td>Channel-independent processing + channel embedding</td></tr>
+    <tr><td><b>Train/live distribution shift</b></td><td>CATScaler (TSC 2025)</td><td>Reversible instance normalisation</td></tr>
+    <tr><td><b>Metrics are not independent</b></td><td>CAGMoE (TCC 2026)</td><td>Directed causal graphs instead of symmetric correlation</td></tr>
+  </tbody>
+</table>
+
+<h3>5.2 What we found ourselves &mdash; and did not see reported anywhere</h3>
+<p>
+These were all measured on the Bitbrains fastStorage trace during Steps 1.2&ndash;1.3. None of the
+thirteen abstracts mentions any of them.
+</p>
+<table>
+  <thead><tr><th style="width:46mm">What we found</th><th class="num">Evidence</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td><b>Switched-off VMs are recorded as zeros</b></td><td class="num">3,993 rows</td><td>VM 214's last 4.6 days are all-zero rows written while the machine was off. Counting them made its mean CPU read 44.21% instead of the true <b>68.43%</b> &mdash; enough to move it inside a 20&ndash;60% selection band it did not belong in.</td></tr>
+    <tr><td><b>A VM can go idle exactly in the test period</b></td><td class="num">4.5 days</td><td>VM 200 had the highest volatility of all candidates, yet its final 15% &mdash; the held-out test set &mdash; is flat zero. Training would succeed and the reported test score would be meaningless.</td></tr>
+    <tr><td><b>Most of the dataset is unusable</b></td><td class="num">889 / 1,177</td><td>76% of VMs average below 5% CPU. A model trained on them learns a constant and still scores well.</td></tr>
+    <tr><td><b>Dead metric columns</b></td><td class="num">225 VMs</td><td>225 VMs have a network column stuck on one value, 12 have dead memory &mdash; invisible if you only screen on CPU, fatal if your model predicts all three.</td></tr>
+    <tr><td><b>Near-duplicate VMs</b></td><td class="num">6 of top 6</td><td>The highest-volatility VMs are near-identical copies of one job. Training on one and testing on another would leak.</td></tr>
+    <tr><td><b>The signal is bimodal, not smooth</b></td><td class="num">92%</td><td>92% of VM 270's readings are at 0&ndash;2% or above 98%. A "next = current" guess is right most of the time, so error metrics flatter any model.</td></tr>
+    <tr><td><b>Correlation is uneven</b></td><td class="num">0.71 / 0.11</td><td>CPU&ndash;memory correlate at 0.71, but CPU&ndash;network only 0.11 &mdash; so the standard justification for multivariate input holds for memory and barely for network.</td></tr>
+  </tbody>
+</table>
+
+<div class="box ok">
+  <span class="lab">Read this twice &mdash; it is the best thing we have</span>
+  <p>
+    Every paper above fixes problems <b>inside the model</b>. What we found are problems <b>inside the
+    dataset</b>, of a kind that silently corrupt VM selection and invalidate a test set before any model
+    exists. That is publishable-shaped work for a mini project, and it is ours because we measured it
+    rather than read it.
+  </p>
+</div>
+</section>
+
+<!-- ============================ 6 COMPARISON ============================ -->
+<section class="page-break">
+<h2><span class="num">6</span>Our project against each paper</h2>
+
+<table>
+  <thead><tr><th style="width:36mm">Paper (venue, year)</th><th style="width:24mm">Dataset</th><th style="width:30mm">Model</th><th>Measured by</th><th>Same as us / different</th></tr></thead>
+  <tbody>
+    <tr><td>MCT-AQNN (TPAMI 24)</td><td>4 benchmarks</td><td>Quantum NN (Toffoli)</td><td>Accuracy</td><td><b>Different:</b> full QNN; we keep a classical LSTM and insert 4 qubits</td></tr>
+    <tr><td>CA-QNN (TNNLS 25)</td><td>4 benchmarks</td><td>Self-structuring QNN</td><td>Prediction error</td><td><b>Different:</b> learns its own architecture; ours is fixed</td></tr>
+    <tr><td>VSBG (IoT-J 24)</td><td>Data-centre traces</td><td>VMD+SG+BiLSTM+Grid</td><td>Prediction error</td><td><b>Same family</b>, far more pre-processing</td></tr>
+    <tr><td>TFEGRU (TSC 24)</td><td>Google, Alibaba</td><td>Time-freq GRU + attention</td><td>Prediction error</td><td><b>Different:</b> frequency domain; channel-independent</td></tr>
+    <tr><td>MSCNet (TSC 25)</td><td>Alibaba, Google, Azure</td><td>Multi-scale + Transformer</td><td>Long-term error</td><td><b>Different horizon:</b> long-term vs our 1 step</td></tr>
+    <tr><td>EvoGWP (TPDS 24)</td><td>Alibaba, Tencent, Google</td><td>Shapelets + evolution GNN</td><td>Long-term error</td><td><b>Different:</b> many VMs interacting; we use one</td></tr>
+    <tr><td>CAGMoE (TCC 26)</td><td>MUCEP, Google, Ali</td><td>Causal graph + MoE</td><td>Accuracy, reliability</td><td><b>Different:</b> causal direction; we only have correlation</td></tr>
+    <tr><td><b>TempoSight (IoT-J 25)</b></td><td><b>Bitbrains</b>, Alibaba</td><td>PatchTST + LSTM + CSA</td><td>RMSE, MAPE</td><td><b>Closest competitor.</b> Same data, same metrics family, stronger model</td></tr>
+    <tr><td>Kollu (ETT 24)</td><td><b>Bitbrains, 1,250 VMs</b></td><td>MLP / ARNN / CNN / LSTM</td><td>"Accuracy"</td><td><b>Same data, weaker method.</b> MLP beat LSTM there</td></tr>
+    <tr><td>ECSLN (TSUSC 26)</td><td>PlanetLab, <b>Bitbrains</b>, Alibaba</td><td>Cosine-similarity net</td><td>Energy, SLA violations</td><td><b>Different goal:</b> consolidation, not scaling</td></tr>
+    <tr><td><b>CATScaler (TSC 25)</b></td><td>Alibaba, Huawei</td><td>Conv-augmented Transformer</td><td>Latency, SLA violations</td><td><b>Same goal as Step 1.6</b>, on a real cluster</td></tr>
+    <tr><td>E-LCWF (TCC 24)</td><td>Real MIS/MES VMs</td><td>Anomaly + ensemble</td><td>Forecast accuracy</td><td><b>Different:</b> anomaly stage we lack</td></tr>
+    <tr><td>Benchmark (Cluster 24)</td><td>Not verified</td><td>Many</td><td>Comparative</td><td>Methodology reference</td></tr>
+    <tr style="background:#e7effb"><td><b>OUR PROJECT</b></td><td><b>Bitbrains VM 270</b><br>8,640 readings, 30 days</td><td>Multivariate LSTM<br>60&times;3 &rarr; 3</td><td><b>Spike response, over-provisioning, false alarms</b></td><td>&mdash;</td></tr>
+  </tbody>
+</table>
+
+<h3>Where we are genuinely behind</h3>
+<ul>
+  <li><b>Scale.</b> One VM, 30 days. The papers use thousands of VMs across several traces. Our results will not generalise and we should not claim they do.</li>
+  <li><b>Model sophistication.</b> A bare LSTM in 2026 is a baseline, not a method.</li>
+  <li><b>No real deployment.</b> CATScaler measured latency on four real servers; our scaling engine is a simulation.</li>
+  <li><b>Single-step horizon.</b> The field has moved to long-horizon forecasting, which is much harder.</li>
+</ul>
+
+<h3>Where we are genuinely ahead</h3>
+<ul>
+  <li><b>Dataset hygiene.</b> Seven measured failure modes, including two that silently break VM selection, none of which appear in the reviewed abstracts.</li>
+  <li><b>A written, reproducible VM-selection protocol.</b> Five rules with measured thresholds. No paper in this set explains how its VMs were chosen.</li>
+  <li><b>Leakage discipline stated and proved.</b> Split before scaling, windows built inside splits, and a positive test (test data scaling to 1.91, outside 0&ndash;1) proving the scaler never saw test data.</li>
+  <li><b>Honest baselines.</b> Comparing against "next = current" on a bimodal signal, where that baseline is strong, is more rigorous than the 98%-accuracy claim in the closest same-dataset paper.</li>
+</ul>
+</section>
+
+<!-- ============================ 7 NOVELTY ============================ -->
+<section class="page-break">
+<h2><span class="num">7</span>How to make this project genuinely ours</h2>
+<p class="lead">
+The honest position: <b>"LSTM predicts load, so scale early"</b> is published (CATScaler, TSC 2025),
+and <b>"quantum network predicts cloud workload"</b> is published (TPAMI 2024, TNNLS 2025). Copying
+either is not an option. These five moves are cheap, defensible, and grounded in gaps this review
+actually found.
+</p>
+
+<div class="card"><div class="head">1. Publish the data-quality audit as a first-class contribution <span class="pick">highest value, lowest effort</span></div><div class="body">
+  <div class="k">Do</div><div>Turn Section&nbsp;5.2 into a named, reusable screening procedure: switched-off row detection, per-split liveness, dead-metric detection, near-duplicate detection. Report how many of the 1,250 VMs fail each test.</div>
+  <div class="k why">Why it is novel</div><div>Every paper here fixes the model. None reports the dataset traps. We have the numbers already; they cost nothing more.</div>
+  <div class="k ifnot">Risk if skipped</div><div>The project becomes "an LSTM on Bitbrains", which is exactly Kollu et al. 2024.</div>
+</div></div>
+
+<div class="card"><div class="head">2. Make the comparison decision-level, not error-level <span class="pick">already planned &mdash; protect it</span></div><div class="body">
+  <div class="k">Do</div><div>Report spike response time, over-provisioning and false alarms, and convert over-provisioning into energy or rupees. Report forecast error too, but lead with the decision.</div>
+  <div class="k why">Why it is novel</div><div>10 of 13 papers stop at RMSE. A better RMSE that does not change a single scaling decision is worth nothing, and almost nobody demonstrates the link.</div>
+</div></div>
+
+<div class="card"><div class="head">3. Attack the hard case, and say why it is hard <span class="pick">turns a weakness into a finding</span></div><div class="body">
+  <div class="k">Do</div><div>Frame VM 270's bimodal, on/off behaviour as the deliberate stress case: a signal where persistence is a strong baseline. Report where the LSTM beats "next = current" and, honestly, where it does not.</div>
+  <div class="k why">Why it is novel</div><div>Papers that report only aggregate error on smooth cluster traces never expose this. A negative result, stated clearly, is more credible than a 98% accuracy claim.</div>
+</div></div>
+
+<div class="card"><div class="head">4. Use an asymmetric, cost-aware loss <span class="pick">small code change, real novelty</span></div><div class="body">
+  <div class="k">Do</div><div>Under-prediction causes an SLA breach; over-prediction only wastes money. Train with a loss that penalises under-prediction more heavily, and show the effect on the three decision metrics.</div>
+  <div class="k why">Why it is novel</div><div>Every reviewed paper trains on symmetric error (MSE/MAE), then argues about SLAs afterwards. Putting the cost asymmetry <b>into the objective</b> connects the two, and no paper in this set does it.</div>
+</div></div>
+
+<div class="card"><div class="head">5. For Phase 2: change the claim from "quantum" to "where quantum helps" <span class="pick">essential</span></div><div class="body">
+  <div class="k">Do</div><div>Keep the classical pipeline byte-identical; swap only the 4-qubit block; report the difference in <b>decision metrics and training cost</b>, not just RMSE. State up front that MCT-AQNN and CA-QNN already exist.</div>
+  <div class="k why">Why it is novel</div><div>Both published QNN papers replace the entire network and measure error only. A controlled hybrid &mdash; identical data, identical classical parts, one component swapped, judged on scaling outcomes &mdash; is the empty corner in the Section&nbsp;4 diagram.</div>
+  <div class="k ifnot">Risk if skipped</div><div>"We added a quantum layer" invites the reply: "TPAMI did that in 2024, better."</div>
+</div></div>
+
+<h3>Two cheap technical upgrades the literature all but demands</h3>
+<ul>
+  <li><b>Decomposition before the LSTM.</b> VSBG and E-LCWF both show raw traces are noisy. Even a simple moving-average or VMD split would strengthen Step 1.4, and it is the first question a reviewer asks.</li>
+  <li><b>Measure the lag between metrics.</b> CAGMoE argues correlation hides direction. Our brief assumes memory follows CPU; a cross-correlation at lags 1&ndash;12 would confirm it, refute it, or give a number worth reporting.</li>
+</ul>
+</section>
+
+<!-- ============================ 8 REFERENCES ============================ -->
+<section class="flow">
+<h2><span class="num">8</span>References</h2>
+<p class="small">All DOIs verified through Crossref/OpenAlex on 24 September 2026. Citation counts as recorded by OpenAlex on that date.</p>
+<ol style="font-size:9.4pt">
+  <li>I. Gupta, D. Saxena, A. K. Singh, C.-N. Lee. "A Multiple Controlled Toffoli Driven Adaptive Quantum Neural Network Model for Dynamic Workload Prediction in Cloud Environments." <i>IEEE Transactions on Pattern Analysis and Machine Intelligence</i>, 2024. doi:10.1109/TPAMI.2024.3402061</li>
+  <li>J. Kumar, D. Saxena, K. Gupta, S. Kumar, A. K. Singh. "A Comprehensively Adaptive Architectural Optimization-Ingrained Quantum Neural Network Model for Cloud Workloads Prediction." <i>IEEE Transactions on Neural Networks and Learning Systems</i>, 2025. doi:10.1109/TNNLS.2025.3577721</li>
+  <li>H. Yuan, J. Bi, S. Li, J. Zhang, M. Zhou. "An Improved LSTM-Based Prediction Approach for Resources and Workload in Large-Scale Data Centers." <i>IEEE Internet of Things Journal</i>, 2024. doi:10.1109/JIOT.2024.3383512</li>
+  <li>F. Zhao, W. Lin, S. Lin, H. Zhong, K. Li. "TFEGRU: Time-Frequency Enhanced Gated Recurrent Unit With Attention for Cloud Workload Prediction." <i>IEEE Transactions on Services Computing</i>, 2024. doi:10.1109/TSC.2024.3517324</li>
+  <li>F. Zhao, W. Lin, S. Lin, S. Tang, K. Li. "MSCNet: Multi-Scale Network With Convolutions for Long-Term Cloud Workload Prediction." <i>IEEE Transactions on Services Computing</i>, 2025. doi:10.1109/TSC.2025.3536313</li>
+  <li>J. Li, J. Yao, D. Xiao, D. Yang, W. Wu. "EvoGWP: Predicting Long-Term Changes in Cloud Workloads Using Deep Graph-Evolution Learning." <i>IEEE Transactions on Parallel and Distributed Systems</i>, 2024. doi:10.1109/TPDS.2024.3357715</li>
+  <li>Y. Luo, Z. Yu, J. Zheng, Z. Yang, L. Sun, D. Wu. "Causality-Aware Graph Mixture of Experts for Accurate Multi-Cloud Workload Prediction." <i>IEEE Transactions on Cloud Computing</i>, 2026. doi:10.1109/TCC.2026.3689897</li>
+  <li>M. Sallam, K. Kaur. "Optimized Resource Forecasting for Carbon-Intelligent Data Centers With TempoSight: A Hybrid Deep Learning Approach." <i>IEEE Internet of Things Journal</i>, 2025. doi:10.1109/JIOT.2025.3610895</li>
+  <li>Kollu et al. "Comparative analysis of cloud resources forecasting using deep learning techniques based on VM workload traces." <i>Transactions on Emerging Telecommunications Technologies</i>, 2024. doi:10.1002/ett.4933</li>
+  <li>N. K. Biswas, D. Das, S. Banerjee, U. Biswas. "Energy-Aware VM Consolidation Using Similarity-Driven Intelligence in Green Cloud Environments." <i>IEEE Transactions on Sustainable Computing</i>, 2026. doi:10.1109/TSUSC.2026.3660014</li>
+  <li>F. Meng, H. Dai, G. Cong, B. Zhu, H. Zhao. "CATScaler: A Convolution-Augmented Transformer Scaling Framework for Cloud-Native Applications." <i>IEEE Transactions on Services Computing</i>, 2025. doi:10.1109/TSC.2025.3592383</li>
+  <li>Y. Kim, S. Song, B.-M. Koo, J. Son, Y. Lee, J.-G. Baek. "Enhancing Long-Term Cloud Workload Forecasting Framework: Anomaly Handling and Ensemble Learning in Multivariate Time Series." <i>IEEE Transactions on Cloud Computing</i>, 2024. doi:10.1109/TCC.2024.3400859</li>
+  <li>S. Lin, W. Lin, F. Zhao, H. Chen. "Benchmarking and revisiting time series forecasting methods in cloud workload prediction." <i>Cluster Computing</i>, 2024. doi:10.1007/s10586-024-04827-3</li>
+</ol>
+
+<h3>Dataset</h3>
+<p class="small">
+S. Shen, V. van Beek, A. Iosup. "Statistical Characterization of Business-Critical Workloads Hosted
+in Cloud Datacenters." <i>CCGrid</i> 2015. GWA-T-12 Bitbrains, fastStorage trace. Data courtesy of
+Bitbrains IT Services, published by TU Delft.
+</p>
+</section>
+
+</body>
+</html>

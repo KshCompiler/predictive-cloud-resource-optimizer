@@ -37,6 +37,7 @@ DOCUMENTS = [
     ("report.html", "Phase1_Progress_Report.pdf"),
     ("guide.html", "Project_Explained_Simply.pdf"),
     ("summary.html", "Quick_Summary.pdf"),
+    ("literature.html", "Literature_Review_and_Comparison.pdf"),
 ]
 
 CHROME_CANDIDATES = [
