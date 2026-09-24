@@ -82,6 +82,7 @@ records exactly how the search was done, so the method can be repeated or challe
     <li><b>Quartiles are unverified.</b> Scimago blocks automated access (HTTP 403), so no quartile in
         this document was read from Scimago. Section&nbsp;2 gives objective metrics instead, and you
         should confirm each journal at <span class="mono">scimagojr.com</span> before submitting.</li>
+    <li><b>One full text was obtained.</b> CA-QNN (TNNLS 2025) is on arXiv; its PDF was downloaded and searched, so the gaps listed for it in Section&nbsp;7.1 are checked rather than inferred. The other twelve are abstract-level only.</li>
     <li><b>Not exhaustive.</b> 213 results from one index with eight queries is a solid sample of the
         field, not the whole of it.</li>
   </ul>
@@ -155,9 +156,9 @@ data problems it reports, and what it means for us.
 </div><div class="bd">
   <div class="row"><div class="k">About</div><div>A quantum neural network that learns <b>its own structure as well as its weights</b>. Workload data becomes qubits, processed by qubit neurons with controlled-NOT activation; the architecture grows and recombines during training (quantum adaptive modulation, size-adaptive recombination).</div></div>
   <div class="row"><div class="k">Problem</div><div>Stated directly: ordinary models are limited because training "relies only on parametric (interconnection weights) adjustments" &mdash; the shape of the network is fixed by hand, so it cannot adapt to sudden demand changes.</div></div>
-  <div class="row"><div class="k">Data</div><div>Four benchmark datasets of heterogeneous cloud workloads; compared against seven state-of-the-art methods.</div></div>
+  <div class="row"><div class="k">Data</div><div>Google Cluster Data and Alibaba Cluster Traces &mdash; the "four datasets" are two traces &times; two metrics (CPU, memory), 1,000 machines aggregated over ten days. <b>Verified from the full text.</b> Compared against seven state-of-the-art methods.</div></div>
   <div class="row"><div class="k">Claim</div><div>Prediction error reduced by up to <b>93.40%</b> vs deep learning and <b>91.27%</b> vs other QNN approaches. Authors' own claim.</div></div>
-  <div class="row"><div class="k us">For us</div><div>Same warning as above, one year more recent and from the same research group. Note what they measure: <b>prediction error only</b>. Neither quantum paper reports what the better forecast does to scaling decisions, cost or SLA violations. That gap is where our project can stand.</div></div>
+  <div class="row"><div class="k us">For us</div><div>Same warning as above, one year more recent and from the same research group. Note what they measure: <b>prediction error only</b>. Neither quantum paper reports what the better forecast does to scaling decisions, cost or SLA violations. That gap is where our project can stand. <b>This is the one paper we read in full &mdash; see Section&nbsp;7.1 for seven checked gaps.</b></div></div>
 </div></div>
 
 <h3>Group B &mdash; Deep learning forecasters <span class="tag">the mainstream</span></h3>
@@ -251,7 +252,7 @@ data problems it reports, and what it means for us.
   <div class="row"><div class="k">About</div><div>Two modules: a convolution-augmented Transformer that predicts workload, and an elastic auto-scaler that turns the prediction into a pod count. Reversible instance normalisation handles drift between training and live data.</div></div>
   <div class="row"><div class="k">Problem</div><div>Stated in almost the same words as our own brief: Kubernetes' default autoscaler "scales pods only when the cluster or application exceeds a predefined threshold&hellip; this reactive approach often leads to significant resource waste because it cannot predict future workload changes and adjust resources in advance."</div></div>
   <div class="row"><div class="k">Claim</div><div>Response-time latency reduced <b>1.1&times;</b> and service violation rate <b>3.2&times;</b> versus Kubernetes' default scaler, on a real 4-server cluster.</div></div>
-  <div class="row"><div class="k us">For us</div><div><b>This is our Step 1.6, already published in a Q1 venue.</b> The proactive-vs-reactive argument is not novel. Two differences remain honest ones: they run on a real cluster (we simulate), and they compare against Kubernetes' scaler rather than a reactive threshold of their own. Our contribution has to be elsewhere &mdash; see Section&nbsp;7.</div></div>
+  <div class="row"><div class="k us">For us</div><div><b>This is our Step 1.6, already published in a Q1 venue.</b> The proactive-vs-reactive argument is not novel. Two differences remain honest ones: they run on a real cluster (we simulate), and they compare against Kubernetes' scaler rather than a reactive threshold of their own. Our contribution has to be elsewhere &mdash; see Sections&nbsp;7 and&nbsp;9.</div></div>
 </div></div>
 
 <div class="paper"><div class="hd">
@@ -289,7 +290,7 @@ data problems it reports, and what it means for us.
     <tr><td><b>Alibaba and Google dominate</b></td><td>8 of 13 use them. Bitbrains appears in 3.</td><td>Bitbrains keeps us comparable with fewer papers, but it is a <b>per-VM</b> trace rather than aggregated cluster telemetry &mdash; a harder, spikier signal.</td></tr>
     <tr><td><b>Error metrics dominate</b></td><td>10 of 13 report only RMSE / MAE / MAPE.</td><td>Our three decision metrics are less common &mdash; a genuine, if modest, strength.</td></tr>
     <tr><td><b>Pre-processing is where the work is</b></td><td>Noise removal, anomaly handling, normalisation shift, decomposition &mdash; all named as core contributions.</td><td><b>This is our strongest area</b>, and the one we have documented most carefully.</td></tr>
-    <tr><td><b>Nobody explains VM selection</b></td><td>Not one abstract in this set says how the specific VMs or subsets were chosen.</td><td><b>The clearest gap we can fill.</b> See Section&nbsp;6.</td></tr>
+    <tr><td><b>Nobody explains VM selection</b></td><td>Not one abstract in this set says how the specific VMs or subsets were chosen.</td><td><b>The clearest gap we can fill.</b> See Section&nbsp;7.</td></tr>
   </tbody>
 </table>
 </section>
@@ -386,9 +387,121 @@ thirteen abstracts mentions any of them.
 </ul>
 </section>
 
+<!-- ============================ 7 GAPS ============================ -->
+<section class="page-break">
+<h2><span class="num">7</span>Where each paper stops &mdash; the gap list</h2>
+<p class="lead">
+A gap is only useful if it is real. Publisher paywalls mean the evidence behind each gap
+below is not equally strong, so every gap carries a label saying how it was established.
+Do not present a "not claimed" gap as a proven weakness.
+</p>
+
+<div class="box">
+  <span class="lab">How to read the evidence labels</span>
+  <table style="margin:1.5mm 0 0 0">
+    <tbody>
+      <tr><td style="width:30mm"><span class="tag q">verified</span></td><td>Checked against the <b>full text</b>. Only CA-QNN was openly available; its PDF was downloaded and searched.</td></tr>
+      <tr><td><span class="tag d">stated</span></td><td>The authors say it themselves in the abstract &mdash; usually as the limitation of prior work that they set out to fix.</td></tr>
+      <tr><td><span class="tag">not claimed</span></td><td>The abstract never mentions it. This means <b>the paper does not advertise it</b>, not that the paper failed to do it. It may appear in the full text.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>7.1 The one paper we could read in full</h3>
+
+<div class="paper"><div class="hd">
+  <span class="t">CA-QNN &mdash; IEEE Trans. Neural Networks and Learning Systems, 2025</span>
+  <span class="m">Full PDF obtained from arXiv (2507.08317) and searched. These gaps are checked, not guessed.</span>
+</div><div class="bd">
+  <div class="row"><div class="k">Gap 1</div><div><b>The quantum model never touched a quantum computer.</b> <span class="tag q">verified</span> Experiments ran on a classical server (two Intel Xeon Silver 4114 CPUs). The words "quantum hardware", "quantum device", "IBM Q" and "Qiskit" appear <b>zero times</b>. The quantum behaviour is simulated.</div></div>
+  <div class="row"><div class="k">Gap 2</div><div><b>Not multivariate.</b> <span class="tag q">verified</span> The word "multivariate" appears <b>zero times</b>. The "four benchmark datasets" are two traces &times; two metrics &mdash; GCD-CPU, GCD-Mem, ACT-CPU, ACT-Mem &mdash; each predicted separately. Cross-metric relationships are never learned.</div></div>
+  <div class="row"><div class="k">Gap 3</div><div><b>No validation set.</b> <span class="tag q">verified</span> "Validation set" and "validation data" appear <b>zero times</b>; the paper reports 60:40, 70:30 and 80:20 train/test ratios only. There is no held-out set for early stopping, so model selection and final scoring share the same data.</div></div>
+  <div class="row"><div class="k">Gap 4</div><div><b>No naive baseline.</b> <span class="tag q">verified</span> "Naive" and "persistence" appear <b>zero times</b>. Seven deep and quantum models are compared with each other, but never with "next value = current value".</div></div>
+  <div class="row"><div class="k">Gap 5</div><div><b>Aggregated machines, not individual VMs.</b> <span class="tag q">verified</span> 1,000 machines are selected and aggregated over the first ten days. Aggregation smooths a signal; per-VM traces are far spikier and harder.</div></div>
+  <div class="row"><div class="k">Gap 6</div><div><b>Error metrics only.</b> <span class="tag q">verified</span> RMSE, MAE, MAPE and training time. No experiment measures scaling actions, SLA violations, energy or cost. The 93.40% error reduction is never converted into a single saved server.</div></div>
+  <div class="row"><div class="k">Gap 7</div><div><b>No Bitbrains.</b> <span class="tag q">verified</span> Zero mentions. Google and Alibaba only.</div></div>
+  <div class="row"><div class="k us">Their own next step</div><div>The conclusion names future work as "qubit-based transfer learning and&hellip; multi-dataset learning, aiming to improve the generalization&hellip; for unseen cloud workloads" &mdash; an admission that generalisation across workloads is not yet solved.</div></div>
+</div></div>
+
+<div class="box ok">
+  <span class="lab">Why this one paper matters so much</span>
+  <p>
+    CA-QNN is the strongest, most recent quantum result in this field, and six of its seven gaps are
+    things our project <b>already does differently</b>: we are multivariate, per-VM, we hold out a real
+    validation set, we compare against a naive baseline, and we measure scaling decisions. We are also
+    equally guilty on one count &mdash; our Phase 2 will simulate qubits with PennyLane on a laptop, exactly
+    as they simulated theirs. Say that before an examiner says it for you.
+  </p>
+</div>
+
+<h3>7.2 Gaps in the other twelve</h3>
+<table>
+  <thead><tr><th style="width:30mm">Paper</th><th>Gap we can work in</th><th style="width:20mm">Evidence</th></tr></thead>
+  <tbody>
+    <tr><td><b>MCT-AQNN</b><br>TPAMI 2024</td><td>Reports accuracy improvements only; the abstract never converts better prediction into a scaling, energy or SLA outcome. Datasets are not named in the abstract, so reproduction needs the full text. Same simulation question as CA-QNN applies and should be checked.</td><td><span class="tag">not claimed</span></td></tr>
+    <tr><td><b>VSBG</b><br>IoT-J 2024</td><td>Four stacked stages (VMD, Savitzky&ndash;Golay, BiLSTM, GridLSTM) with no ablation reported in the abstract, so the contribution of each stage is unknown. Cost of the decomposition at inference time is not discussed &mdash; which matters if a forecast must be produced every five minutes.</td><td><span class="tag">not claimed</span></td></tr>
+    <tr><td><b>TFEGRU</b><br>TSC 2024</td><td>Channel-independent processing is the core idea, which by construction <b>discards cross-metric relationships</b>. On our data CPU&ndash;memory correlate at 0.71, so that discarded signal is real. No decision-level evaluation claimed.</td><td><span class="tag d">stated</span> design</td></tr>
+    <tr><td><b>MSCNet</b><br>TSC 2025</td><td>Built for long horizons; says nothing about the short-horizon case that auto-scaling actually needs (5&ndash;10 minutes). Uses Alibaba, Google, Azure &mdash; all aggregated cluster traces, no per-VM trace.</td><td><span class="tag d">stated</span> scope</td></tr>
+    <tr><td><b>EvoGWP</b><br>TPDS 2024</td><td>Needs many workloads simultaneously to build the evolution graph, so it cannot be applied to a single VM. Graph construction cost and the minimum number of workloads required are not stated.</td><td><span class="tag d">stated</span> design</td></tr>
+    <tr><td><b>CAGMoE</b><br>TCC 2026</td><td>Infers causal direction from a transfer-entropy proxy but the abstract reports no validation that the recovered direction is correct. Mixture-of-Experts adds parameters; no cost or latency figure is claimed.</td><td><span class="tag">not claimed</span></td></tr>
+    <tr><td><b>TempoSight</b><br>IoT-J 2025</td><td>Improvement is quoted "under high-load conditions" &mdash; performance in idle or mixed regimes is not claimed. Cuckoo Search tuning cost is not reported. Motivated by carbon, but the abstract reports RMSE and MAPE, <b>not carbon or energy saved</b>.</td><td><span class="tag d">stated</span> scope</td></tr>
+    <tr><td><b>Kollu et al.</b><br>ETT 2024</td><td>The weakest methodology in the set, on our exact dataset: reports "98% accuracy" &mdash; not a standard regression metric &mdash; with no RMSE/MAE, no naive baseline, and no statement of how VMs were selected from the 1,250. That MLP beat LSTM is left unexplained.</td><td><span class="tag d">stated</span> + <span class="tag">not claimed</span></td></tr>
+    <tr><td><b>ECSLN</b><br>TSUSC 2026</td><td>Predicts <b>host over-utilisation</b>, a binary-ish event, rather than a continuous multi-step forecast; the prediction quality itself is not separated from the consolidation result, so we cannot tell how much of the energy saving comes from better forecasting.</td><td><span class="tag">not claimed</span></td></tr>
+    <tr><td><b>CATScaler</b><br>TSC 2025</td><td>Compared against <b>Kubernetes' default scaler only</b> &mdash; not against a tuned reactive threshold, so part of the 3.2&times; gain may come from a weak opponent. Evaluated on 4 servers with Alibaba and Huawei traces; no per-VM trace, no ablation between the prediction module and the scaling policy.</td><td><span class="tag d">stated</span> + <span class="tag">not claimed</span></td></tr>
+    <tr><td><b>E-LCWF</b><br>TCC 2024</td><td>Anomaly handling is central, but what counts as an anomaly &mdash; and whether removing it also removes real spikes, the very events auto-scaling must catch &mdash; is not addressed in the abstract. Evaluated on private MIS/MES data, so it cannot be reproduced.</td><td><span class="tag">not claimed</span></td></tr>
+    <tr><td><b>Benchmark study</b><br>Cluster Comp. 2024</td><td>Full text paywalled; its datasets and conclusions could not be read. Treat as a reading task, not as evidence.</td><td><span class="tag">unknown</span></td></tr>
+  </tbody>
+</table>
+
+<h3>7.3 The four gaps that repeat across the whole set</h3>
+<table>
+  <thead><tr><th style="width:42mm">Repeating gap</th><th>How often</th><th>What it means for us</th></tr></thead>
+  <tbody>
+    <tr><td><b>Prediction is never converted into a decision</b></td><td>10 of 13 report error metrics only</td><td>The whole field optimises RMSE and then <i>argues</i> that this helps scaling. Our Step 1.6 measures the link instead of assuming it.</td></tr>
+    <tr><td><b>No naive baseline</b></td><td>Not claimed in any of the 13; verified absent in CA-QNN</td><td>Without "next = current" as a floor, a 93% error reduction against other neural networks says nothing about whether the model is needed at all.</td></tr>
+    <tr><td><b>VM / subset selection is never explained</b></td><td>0 of 13 describe it</td><td>Results cannot be reproduced, and selection bias is invisible. We have a written five-rule protocol with measured thresholds.</td></tr>
+    <tr><td><b>Aggregated cluster traces preferred over per-VM</b></td><td>at least 9 of 13</td><td>Aggregation hides the bimodal on/off behaviour that makes a single VM hard. Our harder case is a genuine, if awkward, difference.</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================ 8 GAP -> WORK ============================ -->
+<section class="flow">
+<h2><span class="num">8</span>Turning those gaps into our work items</h2>
+<p class="lead">
+Each row is a gap from Section&nbsp;7, the concrete thing we would build, where it lands in the
+plan, and roughly what it costs. Ordered by value for effort.
+</p>
+
+<table>
+  <thead><tr><th style="width:38mm">Gap in the literature</th><th>What we build</th><th style="width:20mm">Step</th><th style="width:16mm">Effort</th></tr></thead>
+  <tbody>
+    <tr><td><b>Nobody explains VM selection</b></td><td>Publish the five-rule screening protocol with the measured thresholds and the counts that fail each rule (1,250 &rarr; 1,177 &rarr; 158 &rarr; 138). Already implemented in <span class="mono">explore.py</span>; it only needs writing up as a contribution.</td><td>1.2 &mdash; done</td><td>None</td></tr>
+    <tr><td><b>No naive baseline anywhere</b></td><td>Report "next = current" alongside the LSTM on the same test windows, and state plainly where the LSTM fails to beat it.</td><td>1.5</td><td>1 hour</td></tr>
+    <tr><td><b>Error metrics never become decisions</b></td><td>The proactive-vs-reactive comparison: spike response time, over-provisioning, false alarms &mdash; plus a rupee or watt figure derived from over-provisioning.</td><td>1.6</td><td>Planned</td></tr>
+    <tr><td><b>CA-QNN drops cross-metric structure; TFEGRU discards it by design</b></td><td>Run our model twice: CPU-only vs cpu+mem+net, and report the difference. We already measured the correlations (0.71 and 0.11) that predict what should happen.</td><td>1.5</td><td>2 hours</td></tr>
+    <tr><td><b>No validation set in CA-QNN; ratios only</b></td><td>Keep our 70/15/15 split and early stopping on validation, and say explicitly that the test set is touched exactly once.</td><td>1.3 &mdash; done</td><td>None</td></tr>
+    <tr><td><b>Symmetric loss, asymmetric consequences</b></td><td>Train with a loss that penalises under-prediction more than over-prediction, and show the effect on the three decision metrics.</td><td>1.4</td><td>Half a day</td></tr>
+    <tr><td><b>Anomaly handling may delete real spikes (E-LCWF)</b></td><td>If we add anomaly handling, report how many genuine spikes it removes &mdash; the check E-LCWF's abstract does not describe.</td><td>1.2</td><td>2 hours</td></tr>
+    <tr><td><b>CATScaler compares only against the default scaler</b></td><td>Compare against a <b>tuned</b> reactive threshold, not a straw man. Sweep the threshold and report the best reactive setting we can find.</td><td>1.6</td><td>Half a day</td></tr>
+    <tr><td><b>Quantum results are simulated and error-only</b></td><td>Phase 2: identical pipeline, one component swapped, judged on decision metrics and training cost &mdash; and state up front that our qubits are simulated too.</td><td>Phase 2</td><td>Next sem.</td></tr>
+    <tr><td><b>Decomposition never ablated (VSBG)</b></td><td>If we add decomposition, report the model with and without it. One extra row in a table, and it is the ablation VSBG's abstract does not show.</td><td>1.4</td><td>2 hours</td></tr>
+  </tbody>
+</table>
+
+<div class="box warn">
+  <span class="lab">The honest caveat to carry into your viva</span>
+  <p>
+    Most of these gaps are <b>"not claimed in the abstract"</b>, not "proven missing". Before you assert
+    any of them in a report, read the relevant full text through your college library. The only gaps
+    in this document that are checked against a full paper are the seven CA-QNN gaps in Section&nbsp;7.1.
+  </p>
+</div>
+</section>
+
 <!-- ============================ 7 NOVELTY ============================ -->
 <section class="page-break">
-<h2><span class="num">7</span>How to make this project genuinely ours</h2>
+<h2><span class="num">9</span>How to make this project genuinely ours</h2>
 <p class="lead">
 The honest position: <b>"LSTM predicts load, so scale early"</b> is published (CATScaler, TSC 2025),
 and <b>"quantum network predicts cloud workload"</b> is published (TPAMI 2024, TNNLS 2025). Copying
@@ -432,7 +545,7 @@ actually found.
 
 <!-- ============================ 8 REFERENCES ============================ -->
 <section class="flow">
-<h2><span class="num">8</span>References</h2>
+<h2><span class="num">10</span>References</h2>
 <p class="small">All DOIs verified through Crossref/OpenAlex on 24 September 2026. Citation counts as recorded by OpenAlex on that date.</p>
 <ol style="font-size:9.4pt">
   <li>I. Gupta, D. Saxena, A. K. Singh, C.-N. Lee. "A Multiple Controlled Toffoli Driven Adaptive Quantum Neural Network Model for Dynamic Workload Prediction in Cloud Environments." <i>IEEE Transactions on Pattern Analysis and Machine Intelligence</i>, 2024. doi:10.1109/TPAMI.2024.3402061</li>
